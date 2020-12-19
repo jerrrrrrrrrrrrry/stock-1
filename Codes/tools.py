@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
@@ -7,18 +8,55 @@ import time
 import DataProcessor as DP
 from scipy.stats import rankdata
 import tushare as ts
+import Global_Config as gc
 
 
 def get_industrys(level='L1', stocks=None):
     #获取行业分类
-    pro = ts.pro_api()
+    file_list = os.listdir(gc.DATABASE_PATH+'/StockIndustryData')
+    file_list.sort()
+    file = file_list[-1]
+    df = pd.read_csv(gc.DATABASE_PATH+'/StockIndustryData/%s'%file, dtype=str)
+    df.dropna(inplace=True)
+    
+    ind_name_code_dict = {'农林牧渔':'801010.SI',
+                          '采掘':'801020.SI',
+                          '化工':'801030.SI',
+                          '钢铁':'801040.SI',
+                          '有色金属':'801050.SI',
+                          '电子':'801080.SI',
+                          '家用电器':'801110.SI',
+                          '食品饮料':'801120.SI',
+                          '纺织服装':'801130.SI',
+                          '轻工制造':'801140.SI',
+                          '医药生物':'801150.SI',
+                          '公用事业':'801160.SI',
+                          '交通运输':'801170.SI',
+                          '房地产':'801180.SI',
+                          '商业贸易':'801200.SI',
+                          '休闲服务':'801210.SI',
+                          '综合':'801230.SI',
+                          '建筑材料':'801710.SI',
+                          '建筑装饰':'801720.SI',
+                          '电气设备':'801730.SI',
+                          '国防军工':'801740.SI',
+                          '计算机':'801750.SI',
+                          '传媒':'801760.SI',
+                          '通信':'801770.SI',
+                          '银行':'801780.SI',
+                          '非银金融':'801790.SI',
+                          '汽车':'801880.SI',
+                          '机械设备':'801890.SI',
+                          }
+    industrys = {}
+    for ind_name in ind_name_code_dict.keys():
+        industrys[ind_name_code_dict[ind_name]] = list(df.loc[df.loc[:,'行业名称']==ind_name, '股票代码'])
+        industrys[ind_name_code_dict[ind_name]] = [stock + '.SZ' if (stock[0]=='0' or stock[0]=='3') else stock + '.SH' for stock in industrys[ind_name_code_dict[ind_name]]]
+    
     if stocks:
         def cond(stock):
             return stock in stocks
-        industrys = {i:list(filter(cond, pro.index_member(index_code=i).con_code)) for i in pro.index_classify(level=level, src='SW').sort_values('index_code').loc[:, 'index_code']}
-    else:
-        industrys = {i:list(pro.index_member(index_code=i).con_code) for i in pro.index_classify(level=level, src='SW').sort_values('index_code').loc[:, 'index_code']}
-    
+        industrys = {i:list(filter(cond, industrys[i])) for i in industrys.keys()}
     return industrys
 
 
