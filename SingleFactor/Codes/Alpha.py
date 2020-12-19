@@ -48,6 +48,7 @@ class Alpha(SingleFactor):
 if __name__ == '__main__':
     industry_list = ['801030.SI', '801080.SI', '801150.SI', '801730.SI', '801750.SI', '801760.SI', '801770.SI', '801890.SI']
 
+    #industry_list = ['801010.SI', '801030.SI', '801080.SI', '801150.SI', '801160.SI', '801720.SI', '801730.SI', '801740.SI', '801750.SI', '801760.SI', '801770.SI', '801880.SI', '801890.SI']
 
     #获取股票
     stocks = tools.get_stocks()
