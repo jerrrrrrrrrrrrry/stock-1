@@ -18,6 +18,7 @@ import numpy as np
 import tushare as ts
 import pandas as pd
 from pandas import Series, DataFrame
+import winsound
 
 
 if __name__ == '__main__':
@@ -53,7 +54,6 @@ if __name__ == '__main__':
     df = DataFrame(data, index=[now])
     if os.path.exists('D:/stock/DataBase/StockKZKDData/KZKDDFCF.csv'):
         df_old = pd.read_csv('D:/stock/DataBase/StockKZKDData/KZKDDFCF.csv', index_col=[0])
-        print(type(df_old.index[-1]))
         if df_old.index[-1] < now:
             df = pd.concat([df_old, df], axis=0)
             df.sort_index(axis=0, inplace=True)

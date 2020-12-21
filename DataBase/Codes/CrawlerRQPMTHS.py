@@ -18,7 +18,7 @@ import numpy as np
 import tushare as ts
 import pandas as pd
 from pandas import Series, DataFrame
-
+import winsound
 
 if __name__ == '__main__':
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:00')

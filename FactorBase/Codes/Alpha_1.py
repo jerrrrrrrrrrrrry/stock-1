@@ -22,6 +22,7 @@ class Alpha(SingleFactor):
         CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
         ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
+        CLOSE.fillna(method='ffill', inplace=True)
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
         
@@ -46,8 +47,9 @@ class Alpha(SingleFactor):
 
 #%%
 if __name__ == '__main__':
-    industry_list = ['801030.SI', '801080.SI', '801150.SI', '801730.SI', '801750.SI', '801760.SI', '801770.SI', '801890.SI']
+    #industry_list = ['801030.SI', '801080.SI', '801150.SI', '801730.SI', '801750.SI', '801760.SI', '801770.SI', '801890.SI']
 
+    #industry_list = ['801010.SI', '801030.SI', '801080.SI', '801150.SI', '801160.SI', '801720.SI', '801730.SI', '801740.SI', '801750.SI', '801760.SI', '801770.SI', '801880.SI', '801890.SI']
 
     #获取股票
     stocks = tools.get_stocks()
@@ -55,7 +57,7 @@ if __name__ == '__main__':
     industrys = tools.get_industrys(level='L1', stocks=stocks)
     
     
-    industrys = {k:industrys[k] for k in industry_list}
+    industrys = {k:industrys[k] for k in industrys.keys()}
     stocks = []
     for v in industrys.values():
         stocks.extend(v)

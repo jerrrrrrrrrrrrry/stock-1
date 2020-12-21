@@ -169,6 +169,8 @@ class SingleFactor:
             beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
             factor = factor - market_capitalization.mul(beta, axis=0)
         if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
-            factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), header=False, mode='a')
-        else:
-            factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
+            factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])
+            factor = pd.concat([factor_old, factor.loc[factor.index>factor.index[-1], :]], axis=0)
+            factor.sort_index(axis=0, inplace=True)
+            factor.sort_index(axis=1, inplace=True)
+        factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))

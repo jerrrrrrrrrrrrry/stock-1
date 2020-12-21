@@ -12,7 +12,6 @@ import tools
 def main(stocks=None, args=[1, 2, 3, 4, 5]):
     if stocks == None:
         stocks = tools.get_stocks()
-        stocks = [stock+'.SH' if stock[0]=='6' else stock+'.SZ' for stock in stocks]
     data = {stock: pd.read_csv('../../DataBase/StockDailyData/Stock/%s.csv'%stock, index_col=[0], parse_dates=[0]) for stock in stocks}
     
     OPEN = DataFrame({stock: data[stock].loc[:, 'open'] for stock in stocks})
@@ -22,6 +21,9 @@ def main(stocks=None, args=[1, 2, 3, 4, 5]):
     ADJ = DataFrame({stock: data[stock].loc[:, 'adj_factor'] for stock in stocks})
     st = DataFrame({stock: data[stock].loc[:, 'st'] for stock in stocks})
     AMOUNT = DataFrame({stock: data[stock].loc[:, 'amount'] for stock in stocks})
+    
+    st = st.shift()
+    no_liquid = (AMOUNT.lt(AMOUNT.rolling(5).mean().quantile(0.05, axis=1), axis=0)).shift()
     
     tingpai = (CLOSE == np.nan) | (AMOUNT == 0)
     
@@ -34,16 +36,16 @@ def main(stocks=None, args=[1, 2, 3, 4, 5]):
     yiziban = (HIGH == LOW) & (HIGH > CLOSE.shift())
     
     y1 = OPEN.shift(-2) - OPEN.shift(-1)
-    y2 = CLOSE.shift(-2) - OPEN.shift(-2)
-    y3 = CLOSE.shift(-3) - CLOSE.shift(-2)
-    y4 = CLOSE.shift(-4) - CLOSE.shift(-3)
-    y5 = CLOSE.shift(-5) - CLOSE.shift(-4)
+    y2 = OPEN.shift(-3) - OPEN.shift(-2)
+    y3 = OPEN.shift(-4) - OPEN.shift(-3)
+    y4 = OPEN.shift(-5) - OPEN.shift(-4)
+    y5 = OPEN.shift(-6) - OPEN.shift(-5)
     
-    y1[st|yiziban|tingpai] = np.nan
-    y2[st|yiziban|tingpai] = np.nan
-    y3[st|yiziban|tingpai] = np.nan
-    y4[st|yiziban|tingpai] = np.nan
-    y5[st|yiziban|tingpai] = np.nan
+    y1[st|no_liquid|yiziban|tingpai] = np.nan
+    y2[st|no_liquid|yiziban|tingpai] = np.nan
+    y3[st|no_liquid|yiziban|tingpai] = np.nan
+    y4[st|no_liquid|yiziban|tingpai] = np.nan
+    y5[st|no_liquid|yiziban|tingpai] = np.nan
     
     y1.to_csv('../Data/y1.csv')
     y2.to_csv('../Data/y2.csv')

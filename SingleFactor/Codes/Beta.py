@@ -22,10 +22,11 @@ class Beta(SingleFactor):
         CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
         ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
+        CLOSE.fillna(method='ffill', inplace=True)
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
         
-        n = 5
+        n = 10
         
         def reg(y, x, n):
             lxx = (x**2).rolling(n).sum() - n * (x.rolling(n).mean()**2)
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     industrys = tools.get_industrys(level='L1', stocks=stocks)
     
     
-    industrys = {k:industrys[k] for k in industry_list}
+    industrys = {k:industrys[k] for k in industrys.keys()}
     stocks = []
     for v in industrys.values():
         stocks.extend(v)

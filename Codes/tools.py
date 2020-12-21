@@ -65,8 +65,8 @@ def get_stocks(cond=None):
         def cond(stock):
             return stock[0] == '3'
     pro = ts.pro_api()
-    stocks = pro.stock_basic(fields='symbol').iloc[:,0]
-    stocks = [stock + '.SZ' if (stock[0]=='0' or stock[0]=='3') else stock + '.SH' for stock in stocks]
+    stocks = pro.stock_basic(fields='ts_code, list_date')
+    stocks = stocks.loc[stocks.list_date < datetime.datetime.today().strftime('%Y%m%d'), 'ts_code']
     return list(filter(cond, stocks))
 
 
@@ -148,7 +148,10 @@ def centralize(data):
     return data.subtract(data.mean(1), 0)
 
 def standardize(data):
-    return data.subtract(data.mean(1), 0).divide(data.std(1), 0)
+    if len(data.columns) > 1:
+        return data.subtract(data.mean(1), 0).divide(data.std(1), 0)
+    else:
+        return data.subtract(data.mean(1), 0)
 
 def ma_ratio(data, ma_short, ma_long):
     return data.rolling(ma_short).mean() / data.rolling(ma_long).mean()

@@ -8,14 +8,14 @@ import tools
 import Global_Config as gc
 
 def main(start_date, end_date):
-    industry_list = ['801030.SI', '801080.SI', '801150.SI', '801730.SI', '801750.SI', '801760.SI', '801770.SI', '801890.SI']
+    #industry_list = ['801030.SI', '801080.SI', '801150.SI', '801730.SI', '801750.SI', '801760.SI', '801770.SI', '801890.SI']
 
     #获取股票
     stocks = tools.get_stocks()
     #获取行业
     industrys = tools.get_industrys(level='L1', stocks=stocks)
     
-    industrys = {k:industrys[k] for k in industry_list}
+    industrys = {k:industrys[k] for k in industrys.keys()}
     stocks = []
     for v in industrys.values():
         stocks.extend(v)
