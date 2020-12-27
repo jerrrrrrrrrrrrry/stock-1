@@ -32,7 +32,37 @@ class MC(SingleFactor):
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
-
+        
+    def update_factor(self):
+        factor = self.generate_factor()
+        #if 'industry' in self.neutral_list:
+        if True:
+            industrys = tools.get_industrys('L1', self.stocks)
+            tmp = {}
+            for k in industrys.keys():
+                if len(industrys[k]) > 0:
+                    tmp[k] = industrys[k]
+            industrys = tmp
+            factor = tools.standardize_industry(self.factor, industrys)
+        #if 'market_capitalization' in self.neutral_list:
+        if False:
+            market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
+            market_capitalization = np.log(market_capitalization)
+            if self.start_date:
+                market_capitalization = market_capitalization.loc[market_capitalization.index >= self.start_date, :]
+            if self.end_date:
+                market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
+            #if 'industry' in self.neutral_list:
+            if True:
+                market_capitalization = tools.standardize_industry(market_capitalization, industrys)
+            beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
+            factor = factor - market_capitalization.mul(beta, axis=0)
+        if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
+            factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])
+            factor = pd.concat([factor_old, factor.loc[factor.index>factor.index[-1], :]], axis=0)
+            factor.sort_index(axis=0, inplace=True)
+            factor.sort_index(axis=1, inplace=True)
+        factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
 
 #%%
 

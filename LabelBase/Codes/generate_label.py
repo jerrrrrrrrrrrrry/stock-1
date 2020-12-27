@@ -41,6 +41,15 @@ def main(stocks=None, args=[1, 2, 3, 4, 5]):
     y4 = OPEN.shift(-5) - OPEN.shift(-4)
     y5 = OPEN.shift(-6) - OPEN.shift(-5)
     
+    def list_n_na(s, n):
+        for i in range(n):
+            s.loc[s.first_valid_index()] = np.nan
+        return s
+    y1 = y1.apply(func=list_n_na, args=(20,), axis=0, result_type='expand')
+    y2 = y2.apply(func=list_n_na, args=(20,), axis=0, result_type='expand')
+    y3 = y3.apply(func=list_n_na, args=(20,), axis=0, result_type='expand')
+    y4 = y4.apply(func=list_n_na, args=(20,), axis=0, result_type='expand')
+    y5 = y5.apply(func=list_n_na, args=(20,), axis=0, result_type='expand')
     y1[st|no_liquid|yiziban|tingpai] = np.nan
     y2[st|no_liquid|yiziban|tingpai] = np.nan
     y3[st|no_liquid|yiziban|tingpai] = np.nan

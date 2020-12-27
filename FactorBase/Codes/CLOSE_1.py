@@ -24,7 +24,7 @@ import tools
 #%%
 class Close(SingleFactor):
     def generate_factor(self):
-        CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in stocks})
+        CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
         a = np.log(CLOSE)
         
         a = a.loc[a.index >= self.start_date, :]

@@ -32,13 +32,14 @@ class EP(SingleFactor):
         self.factor = a
 
 #%%
-#获取股票
-stocks = tools.get_stocks()
-
-
-a = EP('EP', stocks=stocks, start_date='20200101', end_date='20201010')
-
-a.generate_factor()
-
-a.factor_analysis()
-
+if __name__ == '__main__':
+    #获取股票
+    stocks = tools.get_stocks()
+    
+    
+    a = EP('EP', stocks=stocks, start_date='20200101', end_date='20201010')
+    
+    a.generate_factor()
+    
+    a.factor_analysis()
+    

@@ -27,8 +27,10 @@ class Bias(SingleFactor):
         CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in stocks})
         ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in stocks})
         CLOSE = CLOSE * ADJ
+        CLOSE.fillna(method='ffill', inplace=True)
+        CLOSE = np.log(CLOSE)
         MA = CLOSE.rolling(20).mean()
-        a = np.log(CLOSE / MA)
+        a = CLOSE - MA
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a

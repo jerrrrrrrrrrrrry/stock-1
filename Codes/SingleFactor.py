@@ -25,8 +25,13 @@ class SingleFactor:
     def generate_factor(self):
         self.factor = None
         
-        
+    def inf_to_nan(self, factor):
+        factor[factor==np.inf] = np.nan
+        factor[factor==-np.inf] = np.nan
+        return factor
+    
     def factor_analysis(self, industry_neutral=True, size_neutral=True, num_group=5):
+        self.factor = self.inf_to_nan(self.factor)
         stocks = self.stocks
         start_date = self.start_date
         end_date = self.end_date
@@ -60,9 +65,6 @@ class SingleFactor:
             os.mkdir('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name))
         factor = self.factor
         
-        #行业中性、市值中性
-        #IC、IR、互信息、分组回测
-        
         #行业中性
         if industry_neutral:
             industrys = tools.get_industrys('L1', self.stocks)
@@ -88,6 +90,9 @@ class SingleFactor:
             factor = factor - market_capitalization.mul(beta, axis=0)
             self.factor_industry_size_neutral = factor.copy()
         
+        # self.factor_industry_neutral.fillna(0, inplace=True)
+        # self.factor_industry_size_neutral.fillna(0, inplace=True)
+        # factor.fillna(0, inplace=True)
         #因子分布
         plt.figure(figsize=(16,12))
         plt.hist(factor.fillna(0).values.flatten())
@@ -105,10 +110,6 @@ class SingleFactor:
                 y_neutral = tools.standardize_industry(ys[i], industrys)
             if size_neutral:
                 y_neutral = y_neutral - market_capitalization.mul((y_neutral * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1), axis=0)
-            #散点图
-            #plt.figure(figsize=(16,12))
-            #plt.scatter(factor.fillna(0).values, y_neutral.fillna(0).values, s=5)
-            #plt.savefig('../Results/%s/pair%s.png'%(self.factor_name, i))
             IC[i] = (y_neutral * factor).mean(1) / factor.std(1) / y_neutral.std(1)
             IR[i] = IC[i].rolling(20).mean() / IC[i].rolling(20).std()
             factor_quantile = DataFrame(rankdata(factor, axis=1), index=factor.index, columns=factor.columns).div(factor.notna().sum(1), axis=0)# / len(factor.columns)
@@ -118,6 +119,7 @@ class SingleFactor:
             for n in range(num_group):
                 group_pos[i][n] = DataFrame((n/num_group <= factor_quantile) & (factor_quantile <= (n+1)/num_group))
                 group_pos[i][n][~group_pos[i][n]] = np.nan
+                group_pos[i][n] = 1 * group_pos[i][n]
                 group_backtest[i][n] = ((group_pos[i][n] * ys[i]).mean(1) - ys[i].mean(1)).cumsum().rename('%s'%(n/num_group))
         self.IC = IC
         self.IR = IR
@@ -145,7 +147,8 @@ class SingleFactor:
         
             
     def update_factor(self):
-        factor = self.generate_factor()
+        self.generate_factor()
+        self.factor = self.inf_to_nan(self.factor)
         #if 'industry' in self.neutral_list:
         if True:
             industrys = tools.get_industrys('L1', self.stocks)
@@ -168,9 +171,10 @@ class SingleFactor:
                 market_capitalization = tools.standardize_industry(market_capitalization, industrys)
             beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
             factor = factor - market_capitalization.mul(beta, axis=0)
+        # factor.fillna(0, inplace=True)
         if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
             factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])
             factor = pd.concat([factor_old, factor.loc[factor.index>factor.index[-1], :]], axis=0)
             factor.sort_index(axis=0, inplace=True)
-            factor.sort_index(axis=1, inplace=True)
+        factor.sort_index(axis=1, inplace=True)
         factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))

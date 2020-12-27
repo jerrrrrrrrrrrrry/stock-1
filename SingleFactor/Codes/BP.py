@@ -27,7 +27,7 @@ import tools
 class BP(SingleFactor):
     def generate_factor(self):
         a = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'PB'] for stock in self.stocks})
-        a = np.log(1 / a)
+        a = 1 / a
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
