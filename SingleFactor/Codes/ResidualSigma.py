@@ -29,10 +29,11 @@ class ResidualSigma(SingleFactor):
         CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
         ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
+        CLOSE.fillna(method='ffill', inplace=True)
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
         r_m = DataFrame({stock:r_m for stock in r.columns})
-        n = 10
+        n = 20
         
         def reg(y, x, n):
             lxx = (x**2).rolling(n).sum() - n * (x.rolling(n).mean()**2)

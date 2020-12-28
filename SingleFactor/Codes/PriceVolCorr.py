@@ -32,8 +32,9 @@ class PriceVolCorr(SingleFactor):
         
         CLOSE = np.log(CLOSE)
         AMOUNT = np.log(AMOUNT)
-        
-        n = 5
+        CLOSE.fillna(method='ffill', inplace=True)
+        AMOUNT.fillna(method='ffill', inplace=True)
+        n = 20
         a = CLOSE.rolling(n).corr(AMOUNT)
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]

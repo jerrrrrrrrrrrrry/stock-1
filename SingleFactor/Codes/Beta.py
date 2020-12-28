@@ -26,7 +26,7 @@ class Beta(SingleFactor):
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
         
-        n = 10
+        n = 20
         
         def reg(y, x, n):
             lxx = (x**2).rolling(n).sum() - n * (x.rolling(n).mean()**2)

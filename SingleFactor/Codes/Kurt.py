@@ -29,6 +29,7 @@ class Kurt(SingleFactor):
         CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in stocks})
         ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in stocks})
         CLOSE = CLOSE * ADJ
+        CLOSE.fillna(method='ffill', inplace=True)
         r = np.log(CLOSE).diff()
         n = 20
         a = r.rolling(n).kurt()

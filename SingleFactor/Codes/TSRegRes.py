@@ -31,6 +31,7 @@ class TSRegRes(SingleFactor):
         ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
         CLOSE = np.log(CLOSE)
+        CLOSE.fillna(method='ffill', inplace=True)
         def reg_ts(df, n):
             x = np.arange(n)
             x = x - x.mean()

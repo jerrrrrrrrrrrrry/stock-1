@@ -22,7 +22,7 @@ import tools
 #%%
 class Amount(SingleFactor):
     def generate_factor(self):
-        AMOUNT = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'amount'] for stock in stocks})
+        AMOUNT = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'amount'] for stock in self.stocks})
         
         AMOUNT = np.log(AMOUNT)
         n = 1
