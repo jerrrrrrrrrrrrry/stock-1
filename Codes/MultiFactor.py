@@ -11,20 +11,62 @@ import matplotlib.pyplot as plt
 import tushare as ts
 import tools
 import Global_Config as gc
+import seaborn as sns
 
-class SingleFactor:
-    def __init__(self, factor_name, stocks=None, start_date=None, end_date=None):
+class MultiFactor:
+    def __init__(self, factor_name, stocks, start_date=None, end_date=None):
         self.factor_name = factor_name
-        self.stocks = stocks
         self.start_date = start_date
         self.end_date = end_date
-        
+        self.stocks = stocks
         self.factor = None
         
+    
+    def set_factor(self):
+        self.factor_list = None
+        self.method = None
+    
+    def get_factor(self):
+        self.factor_dict = {factor:pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0]) for factor in self.factor_list}
+        self.df = DataFrame({factor:self.factor_dict[factor].values.reshape(-1) for factor in self.factor_list})
+        self.corr = self.df.corr()
+        self.e_value, self.e_vector = np.linalg.eig(self.corr)
+        r = np.array(len(self.e_value) - rankdata(self.e_value), dtype=np.int32)
+        self.e_value = self.e_value[r]
+        self.e_vector = self.e_vector[:, r]
+    
+    def pairplot(self):
+        plt.figure(figsize=(16,12))
+        sns.pairplot(self.df)
+        plt.savefig('%s/Results/%s/pair.png'%(gc.MULTIFACTOR_PATH, self.factor_name))
         
-    def generate_factor(self):
-        self.factor = None
+    def corrplot(self):
+        plt.figure(figsize=(16,12))
+        sns.heatmap(self.corr)
+        plt.savefig('%s/Results/%s/corr.png'%(gc.MULTIFACTOR_PATH, self.factor_name))
+    
+    def screeplot(self):
+        plt.figure(figsize=(16,12))
+        plt.plot(self.e_value / self.e_value.sum())
+        plt.savefig('%s/Results/%s/scree.png'%(gc.MULTIFACTOR_PATH, self.factor_name))
+    
+    def multi_analysis(self):
+        if not os.path.exists('%s/Results/%s'%(gc.MULTIFACTOR_PATH, self.factor_name)):
+            os.mkdir('%s/Results/%s'%(gc.MULTIFACTOR_PATH, self.factor_name))
+        self.pairplot()
+        self.corrplot()
+        self.screeplot()
         
+    def combine_factor(self):
+        self.factor = DataFrame()
+        if self.method == 'ew':
+            for factor in self.factor_list:
+                self.factor = self.factor.add(self.factor_dict[factor], fill_value=0)
+        elif self.method[:4] == 'pca_':
+            pca_num = int(self.method[4])
+            for i in range(len(self.factor_list)):
+                self.factor = self.factor.add(self.e_vector[i, pca_num] * self.factor_dict[self.factor_list[i]], fill_value=0)
+
     def inf_to_nan(self, factor):
         factor[factor==np.inf] = np.nan
         factor[factor==-np.inf] = np.nan
@@ -61,8 +103,8 @@ class SingleFactor:
         self.y4 = y4
         self.y5 = y5
         
-        if not os.path.exists('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name)):
-            os.mkdir('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name))
+        if not os.path.exists('%s/Results/%s/%s'%(gc.MULTIFACTOR_PATH, self.factor_name, self.method)):
+            os.mkdir('%s/Results/%s/%s'%(gc.MULTIFACTOR_PATH, self.factor_name, self.method))
         factor = self.factor.copy()
         
         #行业中性
@@ -96,7 +138,7 @@ class SingleFactor:
         #因子分布
         plt.figure(figsize=(16,12))
         plt.hist(factor.fillna(0).values.flatten())
-        plt.savefig('%s/Results/%s/hist.png'%(gc.SINGLEFACTOR_PATH, self.factor_name))
+        plt.savefig('%s/Results/%s/%s/hist.png'%(gc.MULTIFACTOR_PATH, self.factor_name, self.method))
         
         #IC、IR、分组回测
         ys = [self.y1, self.y2, self.y3, self.y4, self.y5]
@@ -130,24 +172,26 @@ class SingleFactor:
         for i in range(len(ys)):
             IC[i].cumsum().plot()
         plt.legend(['%s'%i for i in range(len(ys))])
-        plt.savefig('%s/Results/%s/IC.png'%(gc.SINGLEFACTOR_PATH, self.factor_name))
+        plt.savefig('%s/Results/%s/%s/IC.png'%(gc.MULTIFACTOR_PATH, self.factor_name, self.method))
         
         plt.figure(figsize=(16,12))
         for i in range(len(ys)):
             IR[i].cumsum().plot()
         plt.legend(['%s'%i for i in range(len(ys))])
-        plt.savefig('%s/Results/%s/IR.png'%(gc.SINGLEFACTOR_PATH, self.factor_name))
+        plt.savefig('%s/Results/%s/%s/IR.png'%(gc.MULTIFACTOR_PATH, self.factor_name, self.method))
         
         for i in range(len(ys)):
             plt.figure(figsize=(16,12))
             for n in range(num_group):
                 group_backtest[i][n].plot()
             plt.legend(['%s'%i for i in range(num_group)])
-            plt.savefig('%s/Results/%s/groupbacktest%s.png'%(gc.SINGLEFACTOR_PATH, self.factor_name, i))
+            plt.savefig('%s/Results/%s/%s/groupbacktest%s.png'%(gc.MULTIFACTOR_PATH, self.factor_name, self.method, i))
         
             
     def update_factor(self):
-        self.generate_factor()
+        self.set_factor()
+        self.get_factor()
+        self.combine_factor()
         self.factor = self.inf_to_nan(self.factor)
         #if 'industry' in self.neutral_list:
         if True:

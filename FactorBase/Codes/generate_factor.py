@@ -1,15 +1,15 @@
 import os
 import sys
 import datetime
-import pickle
+import numpy as np
+import pandas as pd
+from pandas import Series, DataFrame
 import Config
 sys.path.append(Config.GLOBALCONFIG_PATH)
 import tools
 import Global_Config as gc
 
 def main(start_date, end_date):
-    #industry_list = ['801030.SI', '801080.SI', '801150.SI', '801730.SI', '801750.SI', '801760.SI', '801770.SI', '801890.SI']
-
     #获取股票
     stocks = tools.get_stocks()
     #获取行业
@@ -21,11 +21,23 @@ def main(start_date, end_date):
         stocks.extend(v)
     stocks.sort()
     
+    CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in stocks})
+    dates = CLOSE.index
+    for ind in industrys.keys():
+        if len(industrys[ind]) > 0:
+            df = DataFrame(0, index=dates, columns=stocks)
+            df.loc[:, industrys[ind]] = 1
+            if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, ind)):
+                df_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, ind), index_col=[0], parse_dates=[0])
+                df = pd.concat([df_old, df.loc[df.index> df_old.index[-1]]], axis=0)
+                df.sort_index(0, inplace=True)
+            df.sort_index(1, inplace=True)
+            df.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, ind))
     #遍历取pickle
     files = os.listdir('./')
     files = list(filter(lambda x:len(x)>4, files))
-    factors_1 = list(filter(lambda x:x[-4:]=='1.py', files))
-    factors_2 = list(filter(lambda x:x[-4:]=='2.py', files))
+    factors_1 = list(filter(lambda x:x[-5:]=='_1.py', files))
+    factors_2 = list(filter(lambda x:x[-5:]=='_2.py', files))
     
     #生成单因子
     for p in factors_1:
