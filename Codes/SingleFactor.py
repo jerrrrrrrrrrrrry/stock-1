@@ -63,8 +63,11 @@ class SingleFactor:
         
         if not os.path.exists('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name)):
             os.mkdir('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name))
+        if isinstance(self.factor.index[0], type(y1.index[0])):
+            self.factor = self.factor.loc[y1.index, :]
+        else:
+            self.factor = self.factor.loc[[i.strftime('%Y%m%d') for i in y1.index], :]
         factor = self.factor.copy()
-        
         #行业中性
         if industry_neutral:
             industrys = tools.get_industrys('L1', self.stocks)
