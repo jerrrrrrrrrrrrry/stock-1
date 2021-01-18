@@ -29,7 +29,7 @@ import tools
 class Reversal(MultiFactor):
     def set_factor(self):
         self.factor_list = ['Alpha', 'Bias', 'Donchian', 'Momentum', 'Sharpe', 'TSRegBeta']
-        self.method = 'pca_0'
+        self.method = 'ew'
 
 #%%
 if __name__ == '__main__':

@@ -24,10 +24,11 @@ import tools
 #%%
 
 
-class MC(SingleFactor):
+class MCNL(SingleFactor):
     def generate_factor(self):
         a = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
-        a = np.log(a)
+
+        a = a**3
         
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
@@ -72,9 +73,9 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = MC('MC', stocks=stocks, start_date='20200101', end_date='20201230')
+    a = MCNL('MCNL', stocks=stocks, start_date='20200101', end_date='20201230')
     
     a.generate_factor()
     
-    a.factor_analysis(size_neutral=False)
+    a.factor_analysis()
     

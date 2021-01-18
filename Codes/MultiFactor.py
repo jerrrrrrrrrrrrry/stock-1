@@ -72,7 +72,7 @@ class MultiFactor:
         factor[factor==-np.inf] = np.nan
         return factor
     
-    def factor_analysis(self, industry_neutral=True, size_neutral=True, num_group=5):
+    def factor_analysis(self, industry_neutral=True, size_neutral=True, num_group=10):
         self.factor = self.inf_to_nan(self.factor)
         stocks = self.stocks
         start_date = self.start_date

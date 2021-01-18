@@ -67,7 +67,7 @@ class ChipsCV(SingleFactor):
 if __name__ == '__main__':
     stocks = tools.get_stocks()
     
-    a = ChipsCV('ChipsCV', stocks=stocks, start_date='20200101', end_date='20201130')
+    a = ChipsCV('ChipsCV', stocks=stocks, start_date='20200101', end_date='20201230')
     
     a.generate_factor()
     
