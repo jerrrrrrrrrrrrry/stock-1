@@ -33,7 +33,7 @@ if __name__ == '__main__':
     ept = []
     for code in codes:
         time.sleep(np.random.exponential(0.05))
-        times_max = 10
+        times_max = 3
         while times_max > 0:
             try:
                 header = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.'+str(random.randint(0,999))+' Safari/537.36'
@@ -46,15 +46,14 @@ if __name__ == '__main__':
                 print(code, rank)
                 break
             except:
-                time.sleep(5)
                 times_max -= 1
-        if times_max == 0:
-            winsound.Beep(600,10000)
-            DataFrame(Series([code])).to_csv('D:/stock/DataBase/StockRQPMData/THS%s_error%s.csv'%(date, hour))
+                if times_max == 0:
+                    #winsound.Beep(600,10000)
+                    DataFrame(Series([code])).to_csv('D:/stock/DataBase/StockRQPMData/THS%s_error%s.csv'%(date, hour))
+                time.sleep(5)
     df = DataFrame(data, index=[now])
     if os.path.exists('D:/stock/DataBase/StockRQPMData/RQPMTHS.csv'):
         df_old = pd.read_csv('D:/stock/DataBase/StockRQPMData/RQPMTHS.csv', index_col=[0])
-        print(type(df_old.index[-1]))
         if df_old.index[-1] < now:
             df = pd.concat([df_old, df], axis=0)
             df.sort_index(axis=0, inplace=True)

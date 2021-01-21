@@ -21,6 +21,6 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     IC = pd.read_csv('../Results/IC.csv', index_col=[0], parse_dates=[0])
-    factor = IC.loc[:, 'Amount']
+    factor = IC.loc[:, 'SP']
     factor.plot()
-    sm.graphics.tsa.plot_acf(factor.dropna(), lags=60)
+    sm.graphics.tsa.plot_pacf(factor.dropna(), lags=60)
