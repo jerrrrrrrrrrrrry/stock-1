@@ -30,7 +30,7 @@ class Reversal(MultiFactor):
     def set_factor(self):
         self.factor_list = ['Alpha', 'Bias', 'Donchian', 'Momentum', 'Sharpe', 'TSRegBeta']
         self.method = 'ew'
-
+        self.quantile_nl = 3/5
 #%%
 if __name__ == '__main__':
     #获取股票

@@ -34,7 +34,7 @@ class MC(SingleFactor):
         self.factor = a
         
     def update_factor(self):
-        factor = self.generate_factor()
+        self.generate_factor()
         #if 'industry' in self.neutral_list:
         if True:
             industrys = tools.get_industrys('L1', self.stocks)

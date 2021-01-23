@@ -30,6 +30,7 @@ class Value(MultiFactor):
     def set_factor(self):
         self.factor_list = ['BP', 'CP', 'EP', 'SP']
         self.method = 'ew'
+        self.quantile_nl = None
 
 #%%
 if __name__ == '__main__':

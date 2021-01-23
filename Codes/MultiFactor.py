@@ -20,12 +20,16 @@ class MultiFactor:
         self.end_date = end_date
         self.stocks = stocks
         self.factor = None
+        self.factor_list = None
+        self.method = None
+        self.quantile_nl = None
         
     
     def set_factor(self):
         self.factor_list = None
         self.method = None
-    
+        self.quantile_nl = None
+        
     def get_factor(self):
         self.factor_dict = {factor:pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0]) for factor in self.factor_list}
         self.df = DataFrame({factor:self.factor_dict[factor].values.reshape(-1) for factor in self.factor_list})
@@ -66,7 +70,8 @@ class MultiFactor:
             pca_num = int(self.method[4])
             for i in range(len(self.factor_list)):
                 self.factor = self.factor.add(self.e_vector[i, pca_num] * self.factor_dict[self.factor_list[i]], fill_value=0)
-
+        if self.quantile_nl:
+            self.factor = self.factor.subtract(self.factor.quantile(self.quantile_nl, axis=1), axis=0) ** 2
     def inf_to_nan(self, factor):
         factor[factor==np.inf] = np.nan
         factor[factor==-np.inf] = np.nan

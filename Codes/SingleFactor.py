@@ -113,6 +113,8 @@ class SingleFactor:
                 y_neutral = tools.standardize_industry(ys[i], industrys)
             if size_neutral:
                 y_neutral = y_neutral - market_capitalization.mul((y_neutral * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1), axis=0)
+            if not (industry_neutral or size_neutral):
+                y_neutral = ys[i]
             IC[i] = (y_neutral * factor).mean(1) / factor.std(1) / y_neutral.std(1)
             IR[i] = IC[i].rolling(20).mean() / IC[i].rolling(20).std()
             factor_quantile = DataFrame(rankdata(factor, axis=1), index=factor.index, columns=factor.columns).div(factor.notna().sum(1), axis=0)# / len(factor.columns)
