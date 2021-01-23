@@ -20,8 +20,8 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 
 def main():
-    begin_date = '20200101'
-    end_date = '20210122'
+    begin_date = '20200401'
+    end_date = '20210110'
     factors = ['Amount', 'Beta', 'ChipsCV', 'Close', 'CloseToAverage', 'Value', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'Sigma', 'Skew', 'TurnRate', 'Reversal']
 
     #获取股票超额收益的预测值
@@ -40,7 +40,7 @@ def main():
         factor_df = factor_df.loc[factor_df.index<end_date, :]
         y_hat = y_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
-    stock_num = 500
+    stock_num = 20
     trade_num = int(0.2 * stock_num)
     
     df_position = DataFrame(index=y.index, columns=list(range(stock_num)))
@@ -56,9 +56,10 @@ def main():
         stocks = y_hat.loc[date, :].sort_values(ascending=False).index
         for stock in stocks:
             if stock not in position:
-                position.append(stock)
-                if len(position) >= stock_num:
-                    break
+                if pd.notna(y.loc[date, stock]):
+                    position.append(stock)
+                    if len(position) >= stock_num:
+                        break
         position.sort()
         df_position.loc[date, :] = position
         df_pnl.loc[date, :] = y.loc[date, position].values
