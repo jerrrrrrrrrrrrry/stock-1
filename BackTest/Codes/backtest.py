@@ -41,7 +41,8 @@ def main():
         y_hat = y_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
     stock_num = 20
-    trade_num = int(0.2 * stock_num)
+    turn_rate = 0.2
+    trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=y.index, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(y_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
@@ -51,8 +52,8 @@ def main():
     pre_date = df_position.index[0]
     for date in df_position.index[1:]:
         pre_position = list(df_position.loc[pre_date, :])
-        position = list(y_hat.loc[date, pre_position].sort_values(ascending=False).iloc[:(stock_num-trade_num)].index)
-
+        position = list(y_hat.loc[date, pre_position].sort_values(ascending=False).dropna().iloc[:(stock_num-trade_num)].index)
+        
         stocks = y_hat.loc[date, :].sort_values(ascending=False).index
         for stock in stocks:
             if stock not in position:
