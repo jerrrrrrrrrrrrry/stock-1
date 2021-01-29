@@ -20,9 +20,9 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 
 def main():
-    begin_date = '20200301'
-    end_date = '20210110'
-    factors = ['Beta', 'ChipsCV', 'Close', 'CloseToAverage', 'HK', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'Sigma', 'Skew', 'TurnRate', 'Reversal', 'Value']
+    begin_date = '20200701'
+    end_date = '20210125'
+    factors = ['Beta', 'ChipsCV', 'Close', 'CloseToAverage', 'HK', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'Reversal', 'Value']
 
     #获取股票超额收益的预测值
     IC_hat = pd.read_csv('%s/Results/IC_hat.csv'%gc.IC_PATH, index_col=[0], parse_dates=[0])
@@ -40,8 +40,8 @@ def main():
         factor_df = factor_df.loc[factor_df.index<end_date, :]
         y_hat = y_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
-    stock_num = 5
-    turn_rate = 1
+    stock_num = 20
+    turn_rate = 0.2
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=y.index, columns=list(range(stock_num)))

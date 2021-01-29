@@ -52,7 +52,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = HK('HK', stocks=stocks, start_date='20200701', end_date='20201230')
+    a = HK('HK', stocks=stocks, start_date='20200101', end_date='20201230')
     
     a.generate_factor()
     
