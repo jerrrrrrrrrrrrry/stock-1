@@ -12,7 +12,7 @@ today = datetime.datetime.today().strftime('%Y%m%d')
 if len(sys.argv) > 1:
     start = sys.argv[1]
 else:
-    start = '20150101'
+    start = '20200101'
 end = today
 
 pro = ts.pro_api()

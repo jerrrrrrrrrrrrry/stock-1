@@ -36,10 +36,13 @@ def main():
     y = y.loc[factors[files[0][:-4]].index, factors[files[0][:-4]].columns]
     y = y.subtract(y.mean(1), axis=0).div(y.std(1), axis=0)
     #ic
-    ic = DataFrame({factor:(factors[factor] * y).mean(1) for factor in factors.keys()})
+    #ic = DataFrame({factor:(factors[factor] * y).mean(1) for factor in factors.keys()})
+    ic = DataFrame({factor:factors[factor].corrwith(y, method='spearman', axis=1) for factor in factors.keys()})
+    
     ic.to_csv('%s/Results/IC.csv'%gc.IC_PATH)
     
     ic_hat = ic.ewm(halflife=20).mean().shift(6)
+    #ic_hat = ic.rolling(60).mean().shift(6)
     ic_hat.to_csv('%s/Results/IC_hat.csv'%gc.IC_PATH)
 if __name__ == '__main__':
     main()

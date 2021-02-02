@@ -20,7 +20,7 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 
 def main():
-    begin_date = '20200701'
+    begin_date = '20200401'
     end_date = '20210125'
     factors = ['Beta', 'ChipsCV', 'Close', 'CloseToAverage', 'HK', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'Reversal', 'Value']
 

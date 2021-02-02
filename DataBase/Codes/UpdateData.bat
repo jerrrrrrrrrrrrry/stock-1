@@ -3,3 +3,4 @@ start mshta vbscript:createobject("wscript.shell").run("""%~0"" hide",0)(window.
 :CmdBegin
 python .\UpdateStockDailyData.py
 python .\DownloadHKData.py
+python .\DownloadMoneyData.py

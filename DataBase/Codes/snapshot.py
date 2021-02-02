@@ -57,35 +57,47 @@ def init(context):
             if stocks.loc[i, 'list_date'] < date:
                 stock = 'SZSE.' + stocks.loc[i, 'symbol']
                 history_data = history(symbol=stock, fields='quotes, created_at, price, last_volume, last_amount, trade_type', frequency='tick', start_time=datetime.datetime.strptime(date, '%Y%m%d'),  end_time=(datetime.datetime.strptime(date, '%Y%m%d')+datetime.timedelta(1)), df=True)
-
+                
                 if len(history_data) == 0:
                     continue
+
                 history_data.loc[:, 'created_at'] = [timestamp.tz_localize(tz=None) for timestamp in history_data.loc[:, 'created_at']]
                 history_data = history_data.set_index('created_at')
                 
-                history_data.loc[:, 'bid_price_1'] = [i[0]['bid_p'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_price_2'] = [i[1]['bid_p'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_price_3'] = [i[2]['bid_p'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_price_4'] = [i[3]['bid_p'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_price_5'] = [i[4]['bid_p'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_price_1'] = [i[0]['ask_p'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_price_2'] = [i[1]['ask_p'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_price_3'] = [i[2]['ask_p'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_price_4'] = [i[3]['ask_p'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_price_5'] = [i[4]['ask_p'] for i in history_data.quotes]
+                history_data_1 = history_data.loc[history_data.index < '%s150100'%date, :].copy()
+                history_data_2 = history_data.loc[history_data.index > '%s150100'%date, :].copy()
                 
-                history_data.loc[:, 'bid_vol_1'] = [i[0]['bid_v'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_vol_2'] = [i[1]['bid_v'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_vol_3'] = [i[2]['bid_v'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_vol_4'] = [i[3]['bid_v'] for i in history_data.quotes]
-                history_data.loc[:, 'bid_vol_5'] = [i[4]['bid_v'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_vol_1'] = [i[0]['ask_v'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_vol_2'] = [i[1]['ask_v'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_vol_3'] = [i[2]['ask_v'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_vol_4'] = [i[3]['ask_v'] for i in history_data.quotes]
-                history_data.loc[:, 'ask_vol_5'] = [i[4]['ask_v'] for i in history_data.quotes]
-                history_data.drop(labels='quotes', axis=1, inplace=True)
+                history_data_1.loc[:, 'bid_price_1'] = [i[0]['bid_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_price_2'] = [i[1]['bid_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_price_3'] = [i[2]['bid_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_price_4'] = [i[3]['bid_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_price_5'] = [i[4]['bid_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_price_1'] = [i[0]['ask_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_price_2'] = [i[1]['ask_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_price_3'] = [i[2]['ask_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_price_4'] = [i[3]['ask_p'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_price_5'] = [i[4]['ask_p'] for i in history_data_1.quotes]
+                
+                history_data_1.loc[:, 'bid_vol_1'] = [i[0]['bid_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_vol_2'] = [i[1]['bid_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_vol_3'] = [i[2]['bid_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_vol_4'] = [i[3]['bid_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'bid_vol_5'] = [i[4]['bid_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_vol_1'] = [i[0]['ask_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_vol_2'] = [i[1]['ask_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_vol_3'] = [i[2]['ask_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_vol_4'] = [i[3]['ask_v'] for i in history_data_1.quotes]
+                history_data_1.loc[:, 'ask_vol_5'] = [i[4]['ask_v'] for i in history_data_1.quotes]
+                history_data_1.drop(labels='quotes', axis=1, inplace=True)
 
+                history_data_2.loc[:, 'bid_price_1'] = [i[0]['bid_p'] for i in history_data_2.quotes]
+                history_data_2.loc[:, 'ask_price_1'] = [i[0]['ask_p'] for i in history_data_2.quotes]
+                
+                history_data_2.loc[:, 'bid_vol_1'] = [i[0]['bid_v'] for i in history_data_2.quotes]
+                history_data_2.loc[:, 'ask_vol_1'] = [i[0]['ask_v'] for i in history_data_2.quotes]
+                history_data_2.drop(labels='quotes', axis=1, inplace=True)
+
+                history_data = pd.concat([history_data_1, history_data_2], axis=0)
                 history_data.to_csv("D:/stock/DataBase/StockSnapshootData/%s/%s.csv"%(date, stock))
                 print(date, stock, ' download')
     #pool.close()
