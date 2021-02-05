@@ -66,7 +66,9 @@ class SingleFactor:
         if isinstance(self.factor.index[0], type(y1.index[0])):
             self.factor = self.factor.loc[y1.index, :]
         else:
-            self.factor = self.factor.loc[[i.strftime('%Y%m%d') for i in y1.index], :]
+            ind = [i.strftime('%Y%m%d') for i in y1.index]
+            ind = list(filter(lambda x:x in self.factor.index, ind))
+            self.factor = self.factor.loc[ind, :]
         factor = self.factor.copy()
         #行业中性
         if industry_neutral:
