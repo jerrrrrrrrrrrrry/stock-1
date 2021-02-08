@@ -10,6 +10,12 @@ from scipy.stats import rankdata
 import tushare as ts
 import Global_Config as gc
 
+def get_trade_cal(start_date='20200101', end_date='20201231'):
+    trade_cal = pd.read_csv('%s/TradeCalData/TradeCal.csv'%gc.DATABASE_PATH, index_col=[0], parse_dates=[0])
+    trade_cal = trade_cal.loc[(trade_cal.index>=start_date) & (trade_cal.index<=end_date), :]
+    trade_cal = list(trade_cal.loc[trade_cal.is_open==1, :].index.astype('str'))
+    trade_cal = [s.replace('-', '') for s in trade_cal]
+    return trade_cal
 
 def get_industrys(level='L1', stocks=None):
     #获取行业分类

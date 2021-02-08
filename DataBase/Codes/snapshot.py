@@ -11,7 +11,17 @@ import sys
 import os
 import multiprocessing as mp
 import pickle
+import Config
 
+sys.path.append(Config.GLOBALCONFIG_PATH)
+import Global_Config as gc
+import tools
+
+date = datetime.datetime.today().strftime('%Y%m%d')
+trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
+if len(trade_cal) == 0:
+    sys.exit()
+    
 if len(sys.argv) == 3:
     start_date = sys.argv[1]
     end_date = sys.argv[2]
@@ -27,7 +37,7 @@ else:
 
 def f(date, stocks):
     if not os.path.exists('D:/stock/DataBase/StockSnapshootData/%s'%date):
-            os.mkdir('D:/stock/DataBase/StockSnapshootData/%s'%date)
+        os.mkdir('D:/stock/DataBase/StockSnapshootData/%s'%date)
     for i in stocks.index:
         if stocks.loc[i, 'list_date'] < date:
             stock = 'SZSE.' + stocks.loc[i, 'symbol']

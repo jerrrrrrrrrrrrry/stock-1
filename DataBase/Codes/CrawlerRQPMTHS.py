@@ -11,16 +11,22 @@ from lxml import etree
 import requests
 import json
 import os
-import pickle
 import random
 import time
 import numpy as np
 import tushare as ts
 import pandas as pd
 from pandas import Series, DataFrame
-import winsound
+import Config
+sys.path.append(Config.GLOBALCONFIG_PATH)
+import tools
+
 
 if __name__ == '__main__':
+    date = datetime.datetime.today().strftime('%Y%m%d')
+    trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
+    if len(trade_cal) == 0:
+        sys.exit()
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:00')
     hour = datetime.datetime.now().strftime('%H')
     date = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -52,6 +58,7 @@ if __name__ == '__main__':
                     DataFrame(Series([code])).to_csv('D:/stock/DataBase/StockRQPMData/THS%s_error%s.csv'%(date, hour))
                 time.sleep(5)
     df = DataFrame(data, index=[now])
+    df.to_csv('D:/stock/DataBase/StockRQPMData/RQPMTHS%s.csv'%now)
     if os.path.exists('D:/stock/DataBase/StockRQPMData/RQPMTHS.csv'):
         df_old = pd.read_csv('D:/stock/DataBase/StockRQPMData/RQPMTHS.csv', index_col=[0])
         if df_old.index[-1] < now:

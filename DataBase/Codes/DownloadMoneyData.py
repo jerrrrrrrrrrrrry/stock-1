@@ -9,8 +9,12 @@ from pandas import Series, DataFrame
 import Config
 sys.path.append(Config.GLOBALCONFIG_PATH)
 import Global_Config as gc
+import tools
 
-
+date = datetime.datetime.today().strftime('%Y%m%d')
+trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
+if len(trade_cal) == 0:
+    sys.exit()
 
 if len(sys.argv) == 3:
     start = sys.argv[1]
