@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Feb  9 23:09:23 2021
+
+@author: admin
+"""
+
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -40,7 +47,7 @@ class stdHF(SingleFactor):
             r_daily.fillna(0, inplace=True)
             std_daily = r_daily.resample(rule='15T').sum().std()
             std = pd.concat([std, DataFrame({date:std_daily}).T], axis=0)
-        n = 5
+        n = 20
         a = std.rolling(n).std() / std.rolling(n).mean()
         self.factor = a
 
