@@ -11,6 +11,7 @@ import Config
 sys.path.append(Config.GLOBALCONFIG_PATH)
 
 import Global_Config as gc
+import tools
 import datetime
 
 import numpy as np
@@ -21,7 +22,10 @@ import matplotlib.pyplot as plt
 
 def main():
     begin_date = '20200801'
-    end_date = '20210205'
+    end_date = '20210215'
+    
+    trade_cal = tools.get_trade_cal(begin_date, end_date)
+    trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = ['Beta', 'ChipsCV', 'Close', 'CloseToAverage', 'HK', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'Reversal', 'EP']
 
     #获取股票超额收益的预测值
@@ -30,24 +34,24 @@ def main():
     IC_hat = IC_hat.loc[IC_hat.index<end_date, :]
     
     y = pd.read_csv('%s/Data/y1.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y = y.loc[y.index>begin_date, :]
-    y = y.loc[y.index<end_date, :]
+    y = y.loc[y.index>=begin_date, :]
+    y = y.loc[y.index<=end_date, :]
     
-    y_hat = DataFrame(0, index=y.index, columns=y.columns)
+    y_hat = DataFrame(0, index=trade_cal, columns=y.columns)
     for factor in factors:
         factor_df = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
-        factor_df = factor_df.loc[factor_df.index>begin_date, :]
-        factor_df = factor_df.loc[factor_df.index<end_date, :]
+        factor_df = factor_df.loc[factor_df.index>=begin_date, :]
+        factor_df = factor_df.loc[factor_df.index<=end_date, :]
         y_hat = y_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
-    stock_num = 500
-    turn_rate = 0.2
+    stock_num = 20
+    turn_rate = 0.1
     trade_num = int(stock_num * turn_rate)
     
-    df_position = DataFrame(index=y.index, columns=list(range(stock_num)))
+    df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(y_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
 
-    df_pnl = DataFrame(0, index=y.index, columns=list(range(stock_num)))
+    df_pnl = DataFrame(0, index=trade_cal, columns=list(range(stock_num)))
 
     pre_date = df_position.index[0]
     for date in df_position.index[1:]:
@@ -57,10 +61,9 @@ def main():
         stocks = y_hat.loc[date, :].sort_values(ascending=False).index
         for stock in stocks:
             if stock not in position:
-                if pd.notna(y.loc[date, stock]):
-                    position.append(stock)
-                    if len(position) >= stock_num:
-                        break
+                position.append(stock)
+                if len(position) >= stock_num:
+                    break
         position.sort()
         df_position.loc[date, :] = position
         df_pnl.loc[date, :] = y.loc[date, position].values
