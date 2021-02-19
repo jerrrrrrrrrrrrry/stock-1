@@ -42,7 +42,7 @@ for stock in stocks:
         df = pd.concat([daily.loc[[stock], :], adj_factor.loc[[stock], :], ], axis=1, sort=False)
         df.loc[:,'st'] = ('ST' in name.loc[stock, 'name'])
         df.index=[today]
-        df = pd.concat([DataFrame(stock, index=[today], columns=['ts_code']), df], axis=1, sort=False)
+        df = pd.concat([DataFrame(stock, index=[datetime.datetime.strptime(today, '%Y%m%d')], columns=['ts_code']), df], axis=1, sort=False)
         if os.path.exists('../StockDailyData/Stock/%s.csv'%stock):
             df.to_csv('../StockDailyData/Stock/%s.csv'%stock, mode='a', header=False)
             df_daily = pd.concat([df_daily, df.iloc[-1:, :]], axis=0, sort=False)
@@ -53,4 +53,4 @@ for stock in stocks:
     else:
         if os.path.exists('../StockDailyData/Stock/%s.csv'%stock):
             DataFrame(index=[today]).to_csv('../StockDailyData/Stock/%s.csv'%stock, mode='a', header=False)
-df_daily.set_index('ts_code').to_csv('../StockDailyData/Daily/%s.csv'%df.index[-1])
+df_daily.set_index('ts_code').to_csv('../StockDailyData/Daily/%s.csv'%df.index[-1].strftime('%Y%m%d'))

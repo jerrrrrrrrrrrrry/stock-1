@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Feb  9 23:09:23 2021
+
+@author: admin
+"""
+
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -9,7 +16,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 import tushare as ts
-
+import os
 import Config
 sys.path.append(Config.GLOBALCONFIG_PATH)
 from SingleFactor import SingleFactor
@@ -17,15 +24,12 @@ import Global_Config as gc
 import tools
 #%%
 
-class RQPM_HF(SingleFactor):
+class HFSkewMean(SingleFactor):
     def generate_factor(self):
-        rqpm = pd.read_csv('%s/StockRQPMData/RQPMTHS.csv'%(gc.DATABASE_PATH), index_col=[0], parse_dates=[0])
-
-        rqpm.columns = [col+'.SZ' for col in rqpm.columns]
-        rqpm = rqpm.resample(rule='d').apply(lambda x:x.mean())
-        a = rqpm
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        skew = pd.read_csv('%s/Data/HFSkew.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        n = 20
+        skew_mean = skew.rolling(n).mean()
+        a = skew_mean
         self.factor = a
 
 
@@ -35,7 +39,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
 
-    a = RQPM_HF('RQPM_HF', stocks=stocks, start_date='20201201', end_date='20210128')
+    a = HFSkewMean('HFSkewMean', stocks=stocks, start_date='20200901', end_date='20210128')
     
     a.generate_factor()
     

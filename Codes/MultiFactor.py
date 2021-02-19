@@ -31,7 +31,13 @@ class MultiFactor:
         self.quantile_nl = None
         
     def get_factor(self):
-        self.factor_dict = {factor:pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0]) for factor in self.factor_list}
+        if self.factor_list == 'all':
+            files = os.listdir('%s/Data/'%(gc.FACTORBASE_PATH))
+            self.factor_dict = {file.split('.')[0]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]) for file in files}
+        else:
+            self.factor_dict = {factor:pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0]) for factor in self.factor_list}
+        for key in self.factor_dict.keys():
+            self.factor_dict[key] = self.factor_dict[key].loc[(self.factor_dict[key].index>self.start_date) & (self.factor_dict[key].index<self.end_date), :]
         self.df = DataFrame({factor:self.factor_dict[factor].values.reshape(-1) for factor in self.factor_list})
         self.corr = self.df.corr()
         self.e_value, self.e_vector = np.linalg.eig(self.corr)

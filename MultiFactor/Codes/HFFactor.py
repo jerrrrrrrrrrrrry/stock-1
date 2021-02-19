@@ -26,17 +26,17 @@ import tools
 
 #%%
 
-class Value(MultiFactor):
+class HFFactor(MultiFactor):
     def set_factor(self):
-        self.factor_list = ['BP', 'CP', 'EP', 'SP']
-        self.method = 'ew'
-        self.quantile_nl = None
+        self.factor_list = ['HFVolMean', 'HFPriceVolCorrMean', 'HFSkewMean', 'Skew', 'HFReversalMean', 'Beta', 'Sigma']
+        self.factor_list.extend(['EP', 'Amount', 'ChipsCV', 'CLOSE', 'CloseToAverage', 'Jump'])
+        self.method = 'pca_1'
 #%%
 if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = Value('Value', stocks, start_date='20200101', end_date='20201225')
+    a = HFFactor('HFFactor', stocks, start_date='20210111', end_date='20210210')
     
     a.set_factor()
     

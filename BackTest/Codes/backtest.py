@@ -21,13 +21,16 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 
 def main():
-    begin_date = '20200801'
+    begin_date = '20200901'
     end_date = '20210215'
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
-    factors = ['Beta', 'ChipsCV', 'Close', 'CloseToAverage', 'HK', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'Reversal', 'EP']
-
+    factors = []
+    #factors.extend(['Amount', 'Close', 'CloseToAverage', 'HK', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'RQPM', 'Sigma', 'TurnRate'])
+    #factors.extend(['ChipsCV', 'Close', 'CloseToAverage', 'HK', 'Jump', 'MC', 'MCNL', 'MomentumInd', 'RQPM', 'Sigma', 'TurnRate', 'EP'])
+    factors.extend(['HFPriceVolCorr', 'HFReversalMean', 'HFSkewMean', 'HFVolMean'])
+    factors.extend(['ChipsCV', 'CloseToAverage', 'EP', 'MC', 'RQPM', 'HK'])
     #获取股票超额收益的预测值
     IC_hat = pd.read_csv('%s/Results/IC_hat.csv'%gc.IC_PATH, index_col=[0], parse_dates=[0])
     IC_hat = IC_hat.loc[IC_hat.index>begin_date, :]
@@ -45,7 +48,7 @@ def main():
         y_hat = y_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
     stock_num = 20
-    turn_rate = 0.1
+    turn_rate = 0.2
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
