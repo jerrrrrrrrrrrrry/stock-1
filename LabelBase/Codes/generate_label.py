@@ -23,7 +23,7 @@ def main(stocks=None):
     AMOUNT = DataFrame({stock: data[stock].loc[:, 'amount'] for stock in stocks})
     
     st = st.shift()
-    no_liquid = (AMOUNT.lt(AMOUNT.rolling(5).mean().quantile(0.05, axis=1), axis=0)).shift()
+    no_liquid = (AMOUNT.lt(AMOUNT.ewm(halflife=20).mean().quantile(0.1, axis=1), axis=0)).shift()
     
     tingpai = (CLOSE == np.nan) | (AMOUNT == 0)
     
@@ -50,7 +50,7 @@ def main(stocks=None):
         for i in range(n):
             s.loc[s.first_valid_index()] = np.nan
         return s
-    n = 60
+    n = 20
     y1 = y1.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
     y2 = y2.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
     y3 = y3.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')

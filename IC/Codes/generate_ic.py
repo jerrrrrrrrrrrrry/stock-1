@@ -65,10 +65,11 @@ def main():
     
     #ic = DataFrame({factor:factors[factor].corrwith(y, method='spearman', axis=1) for factor in factors.keys()})
     
-    turn_rate = 0.1
+    turn_rate = 0.2
     w = 1 - turn_rate
-    ic = ic1 + w * ic2.shift() + w**2 * ic3.shift(2) + w**3 * ic4.shift(3) + w**4 * ic5.shift(4) + w**5 * ic6.shift(5) + w**6 * ic7.shift(6) + w**7 * ic8.shift(7) + w**8 * ic9.shift(8) + w**9 * ic10.shift(9)
-    
+    m = ic1 + w * ic2.shift() + w**2 * ic3.shift(2) + w**3 * ic4.shift(3) + w**4 * ic5.shift(4) + w**5 * ic6.shift(5) + w**6 * ic7.shift(6) + w**7 * ic8.shift(7) + w**8 * ic9.shift(8) + w**9 * ic10.shift(9)
+    s = np.sqrt((ic1-m)**2 + w * (ic2.shift()-m)**2 + w**2 * (ic3.shift(2)-m)**2 + w**3 * (ic4.shift(3)-m)**2 + w**4 * (ic5.shift(4)-m)**2 + w**5 * (ic6.shift(5)-m)**2 + w**6 * (ic7.shift(6)-m)**2 + w**7 * (ic8.shift(7)-m)**2 + w**8 * (ic9.shift(8)-m)**2 + w**9 * (ic10.shift(9)-m)**2)
+    ic = m / s
     #ic1_hat = ic1.ewm(halflife=20).mean().shift(2)
     #ic2_hat = ic2.ewm(halflife=20).mean().shift(3)
     #ic3_hat = ic3.ewm(halflife=20).mean().shift(4)
@@ -84,7 +85,8 @@ def main():
     ic5.to_csv('%s/Results/IC5.csv'%gc.IC_PATH)
     ic.to_csv('%s/Results/IC.csv'%gc.IC_PATH)
     
-    ic_hat = ic.ewm(halflife=20).mean().shift(2)
+    ic_hat = ic.ewm(halflife=20).mean().shift(2) / ic.ewm(halflife=20).std().shift(2)
+    #ic_hat = ic.ewm(halflife=20).mean().shift(2)
     #ic_hat = ic1_hat + 0.7 * ic2_hat + 0.7**2 * ic3_hat + 0.7**3 * ic4_hat + 0.7**4 * ic5_hat
     
     #ic_hat = ic.rolling(60).mean().shift(6)

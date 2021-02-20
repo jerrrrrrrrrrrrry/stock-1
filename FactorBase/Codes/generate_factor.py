@@ -80,6 +80,10 @@ if __name__ == '__main__':
     elif len(sys.argv) == 1:
         start_date = datetime.datetime.today().strftime('%Y%m%d')
         end_date = datetime.datetime.today().strftime('%Y%m%d')
+        date = datetime.datetime.today().strftime('%Y%m%d')
+        trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
+        if len(trade_cal) == 0:
+            sys.exit()
     else:
         print('date?')
         exit()
