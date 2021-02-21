@@ -35,38 +35,21 @@ class SingleFactor:
         stocks = self.stocks
         start_date = self.start_date
         end_date = self.end_date
-        y1 = pd.read_csv('%s/Data/y1.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0]).loc[:, stocks]
-        y2 = pd.read_csv('%s/Data/y2.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0]).loc[:, stocks]
-        y3 = pd.read_csv('%s/Data/y3.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0]).loc[:, stocks]
-        y4 = pd.read_csv('%s/Data/y4.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0]).loc[:, stocks]
-        y5 = pd.read_csv('%s/Data/y5.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0]).loc[:, stocks]
-        
+        y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0]).loc[:, stocks]
         if start_date:
-            y1 = y1.loc[y1.index >= start_date, :]
-            y2 = y2.loc[y2.index >= start_date, :]
-            y3 = y3.loc[y3.index >= start_date, :]
-            y4 = y4.loc[y4.index >= start_date, :]
-            y5 = y5.loc[y5.index >= start_date, :]
-            
+            y = y.loc[y.index >= start_date, :]
+        
         if end_date:
-            y1 = y1.loc[y1.index <= end_date, :]
-            y2 = y2.loc[y2.index <= end_date, :]
-            y3 = y3.loc[y3.index <= end_date, :]
-            y4 = y4.loc[y4.index <= end_date, :]
-            y5 = y5.loc[y5.index <= end_date, :]
-            
-        self.y1 = y1
-        self.y2 = y2
-        self.y3 = y3
-        self.y4 = y4
-        self.y5 = y5
+            y = y.loc[y.index <= end_date, :]
+        
+        ys = [y.shift(-n) for n in range(10)]
         
         if not os.path.exists('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name)):
             os.mkdir('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name))
-        if isinstance(self.factor.index[0], type(y1.index[0])):
-            self.factor = self.factor.loc[y1.index, :]
+        if isinstance(self.factor.index[0], type(y.index[0])):
+            self.factor = self.factor.loc[y.index, :]
         else:
-            ind = [i.strftime('%Y%m%d') for i in y1.index]
+            ind = [i.strftime('%Y%m%d') for i in y.index]
             ind = list(filter(lambda x:x in self.factor.index, ind))
             self.factor = self.factor.loc[ind, :]
         factor = self.factor.copy()
@@ -104,7 +87,7 @@ class SingleFactor:
         plt.savefig('%s/Results/%s/hist.png'%(gc.SINGLEFACTOR_PATH, self.factor_name))
         
         #IC、IR、分组回测
-        ys = [self.y1, self.y2, self.y3, self.y4, self.y5]
+        #ys = [y1, y2, y3, y4]
         IC = {}
         IR = {}
         group_backtest = {}

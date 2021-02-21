@@ -32,7 +32,7 @@ class Jump(SingleFactor):
         OPEN.fillna(method='ffill', inplace=True)
         CLOSE = CLOSE * ADJ
         CLOSE.fillna(method='ffill', inplace=True)
-        a = np.log(OPEN / CLOSE.shift())
+        a = np.log(OPEN / CLOSE.shift()).rolling(20).mean()
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = Jump('Jump', stocks=stocks, start_date='20200101', end_date='20201201')
+    a = Jump('Jump', stocks=stocks, start_date='20200101', end_date='20210221')
     
     a.generate_factor()
     
