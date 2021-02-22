@@ -22,20 +22,20 @@ import matplotlib.pyplot as plt
 
 def main():
     begin_date = '20200209'
-    end_date = '20210220'
-    
+    end_date = datetime.datetime.today().strftime('%Y%m%d')
+    end_date = '20210222'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['ChipsCV', 'CloseToAverage', 'HK', 'MC', 'RQPM', 'Sigma', 'TurnRate', 'EP'])
-    factors.extend(['HFPriceVolCorr', 'HFReversalMean', 'HFSkewMean', 'HFVolMean'])
+    factors.extend(['ROE', 'DEP', 'Amount', 'Close', 'ChipsCV', 'CloseToAverage', 'HK', 'MC', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'EP'])
+    factors.extend(['HFPriceVolCorr', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
     factors = list(set(factors))
     print(factors)
     #获取股票超额收益的预测值
     IC_hat = pd.read_csv('%s/Results/IC_hat.csv'%gc.IC_PATH, index_col=[0], parse_dates=[0])
-    IC_hat = IC_hat.loc[IC_hat.index>begin_date, :]
-    IC_hat = IC_hat.loc[IC_hat.index<end_date, :]
+    IC_hat = IC_hat.loc[IC_hat.index>=begin_date, :]
+    IC_hat = IC_hat.loc[IC_hat.index<=end_date, :]
     
     r = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
@@ -50,20 +50,21 @@ def main():
         r_hat = r_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
     stock_num = 30
-    turn_rate = 0.1
+    turn_rate = 0.2
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
 
     df_pnl = DataFrame(0, index=trade_cal, columns=list(range(stock_num)))
-    df_stock_sort = DataFrame(index=trade_cal, columns=r_hat.columns)
+    df_stock_sort = DataFrame(index=trade_cal, columns=list(range(len(r_hat.columns))))
+    df_sell = DataFrame(index=trade_cal, columns=list(range(trade_num)))
     
     pre_date = df_position.index[0]
     for date in df_position.index[1:]:
         pre_position = list(df_position.loc[pre_date, :])
-        position = list(r_hat.loc[date, pre_position].sort_values(ascending=False).dropna().iloc[:(stock_num-trade_num)].index)
-        
+        position = list(r_hat.loc[date, pre_position].sort_values(ascending=False).iloc[:(stock_num-trade_num)].index)
+        df_sell.loc[date, :] = list(r_hat.loc[date, pre_position].sort_values(ascending=True).iloc[:trade_num].index)
         stocks = r_hat.loc[date, :].sort_values(ascending=False).index
         df_stock_sort.loc[date, :] = stocks.values
         for stock in stocks:
@@ -77,7 +78,9 @@ def main():
         df_pnl.loc[date, :] = r.loc[date, position].values
         pre_date = date
     pnl = df_pnl.mean(1)
+    r_hat.to_csv('%s/Results/r_hat.csv'%gc.BACKTEST_PATH)
     df_stock_sort.to_csv('%s/Results/df_stock_sort.csv'%gc.BACKTEST_PATH)
+    df_sell.to_csv('%s/Results/df_sell.csv'%gc.BACKTEST_PATH)
     df_position.to_csv('%s/Results/df_position.csv'%gc.BACKTEST_PATH)
     df_pnl.to_csv('%s/Results/df_pnl.csv'%gc.BACKTEST_PATH)
     pnl.to_csv('%s/Results/pnl.csv'%gc.BACKTEST_PATH)

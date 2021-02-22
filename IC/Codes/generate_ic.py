@@ -19,6 +19,9 @@ from pandas import Series, DataFrame
 
 import datetime
 def main():
+    halflife = 1
+    turn_rate = 0.2
+    n = 20
     #get y
     y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     
@@ -27,7 +30,7 @@ def main():
     files = list(filter(lambda x:x[0] > '9', files))
     factors = {file[:-4]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]) for file in files}
     
-    ic_list = [DataFrame({factor:factors[factor].corrwith(y.shift(-n), method='pearson', axis=1) for factor in factors.keys()}) for n in range(20)]
+    ic_list = [DataFrame({factor:factors[factor].corrwith(y.shift(-n), method='pearson', axis=1) for factor in factors.keys()}) for n in range(n)]
     
     trade_cal = tools.get_trade_cal(start_date='20200101', end_date=datetime.datetime.today().strftime('%Y%m%d'))
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
@@ -35,9 +38,9 @@ def main():
     dates = list(filter(lambda x:x in trade_cal, dates))
     ic_list = [ic.loc[dates, :] for ic in ic_list]
     
-    ic_hat_list = [ic.ewm(halflife=20).mean().shift(2) for ic in ic_list]
+    ic_hat_list = [ic.ewm(halflife=halflife).mean().shift(2) for ic in ic_list]
     
-    ir_hat_list = [(ic.ewm(halflife=20).mean() / ic.ewm(halflife=20).std()).shift(2) for ic in ic_list]
+    ir_hat_list = [(ic.ewm(halflife=halflife).mean() / ic.ewm(halflife=halflife).std()).shift(2) for ic in ic_list]
     def f(df_list, turn_rate=0.1):
         q = 1 - turn_rate
         q_sum = (1 - q**len(df_list)) / (1 - q)
@@ -57,9 +60,9 @@ def main():
         ret = mean
         return ret
     
-    ic_hat = f(ic_hat_list)
+    ic_hat = f(ic_hat_list, turn_rate)
     ic_hat.to_csv('%s/Results/IC_hat.csv'%gc.IC_PATH)
-    ir_hat = f(ir_hat_list)
+    ir_hat = f(ir_hat_list, turn_rate)
     ir_hat.to_csv('%s/Results/IR_hat.csv'%gc.IC_PATH)
     '''
     for i in range(len(ic_list)):

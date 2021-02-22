@@ -43,14 +43,14 @@ class HFVolPower(SingleFactor):
             vol = DataFrame({'%s.SZ'%stock:data_dic[stock].loc[:, 'last_volume'] for stock in data_dic.keys()})
             vol.fillna(0, inplace=True)
             vol = vol.loc[vol.index>='%s093000'%(date.replace('-', '')), :]
+            vol = vol.resample('1T').sum()
             vol[vol==0] = 1
             
             power_daily = vol.apply(func=estimate_power, axis=0)
             
             power = pd.concat([power, DataFrame({date:power_daily}).T], axis=0)
 
-        n = 5
-        a = power.rolling(n).mean()
+        a = power
         self.factor = a
 
 
