@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 def main():
     begin_date = '20200209'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210222'
+    end_date = '20210223'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
@@ -58,6 +58,12 @@ def main():
 
     df_pnl = DataFrame(0, index=trade_cal, columns=list(range(stock_num)))
     df_stock_sort = DataFrame(index=trade_cal, columns=list(range(len(r_hat.columns))))
+    
+    df_rank_stock = r_hat.rank(axis=1)
+    
+    df_rank_pre_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
+    df_rank_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
+    
     df_sell = DataFrame(index=trade_cal, columns=list(range(trade_num)))
     
     pre_date = df_position.index[0]
@@ -73,12 +79,23 @@ def main():
                     position.append(stock)
                     if len(position) >= stock_num:
                         break
+        pre_rank = r_hat.loc[date, :].rank().loc[pre_position].sort_values(ascending=False)
+        rank = r_hat.loc[date, :].rank().loc[position].sort_values(ascending=False)
+        
+        df_rank_pre_position.loc[date, :] = [{stock:pre_rank.loc[stock]} for stock in pre_rank.index]
+        df_rank_position.loc[date, :] = [{stock:rank.loc[stock]} for stock in rank.index]
+        
         position.sort()
         df_position.loc[date, :] = position
         df_pnl.loc[date, :] = r.loc[date, position].values
         pre_date = date
     pnl = df_pnl.mean(1)
     r_hat.to_csv('%s/Results/r_hat.csv'%gc.BACKTEST_PATH)
+    
+    df_rank_stock.to_csv('%s/Results/df_rank_stock.csv'%gc.BACKTEST_PATH)
+    df_rank_pre_position.to_csv('%s/Results/df_rank_pre_position.csv'%gc.BACKTEST_PATH)
+    df_rank_position.to_csv('%s/Results/df_rank_position.csv'%gc.BACKTEST_PATH)
+    
     df_stock_sort.to_csv('%s/Results/df_stock_sort.csv'%gc.BACKTEST_PATH)
     df_sell.to_csv('%s/Results/df_sell.csv'%gc.BACKTEST_PATH)
     df_position.to_csv('%s/Results/df_position.csv'%gc.BACKTEST_PATH)
