@@ -23,12 +23,12 @@ import matplotlib.pyplot as plt
 def main():
     begin_date = '20200209'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210223'
+    end_date = '20210224'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['ROE', 'DEP', 'Amount', 'Close', 'ChipsCV', 'CloseToAverage', 'HK', 'MC', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'EP'])
-    factors.extend(['HFPriceVolCorr', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
+    factors.extend(['CORRMarket', 'ROE', 'DEP', 'Amount', 'Close', 'ChipsCV', 'CloseToAverage', 'HK', 'MC', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'EP'])
+    factors.extend(['HFPriceVolCorrMean', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
     factors = list(set(factors))
     print(factors)
@@ -56,7 +56,7 @@ def main():
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
 
-    df_pnl = DataFrame(0, index=trade_cal, columns=list(range(stock_num)))
+    df_pnl = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_stock_sort = DataFrame(index=trade_cal, columns=list(range(len(r_hat.columns))))
     
     df_rank_stock = r_hat.rank(axis=1)
@@ -90,6 +90,7 @@ def main():
         df_pnl.loc[date, :] = r.loc[date, position].values
         pre_date = date
     pnl = df_pnl.mean(1)
+    pnl.fillna(r.mean(1), inplace=True)
     r_hat.to_csv('%s/Results/r_hat.csv'%gc.BACKTEST_PATH)
     
     df_rank_stock.to_csv('%s/Results/df_rank_stock.csv'%gc.BACKTEST_PATH)

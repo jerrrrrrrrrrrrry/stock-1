@@ -23,6 +23,8 @@ class HFReversalMean(SingleFactor):
         n = 20
         reversal_mean = reversal.rolling(n).mean()
         a = reversal_mean
+        a = a.loc[a.index >= self.start_date, :]
+        a = a.loc[a.index <= self.end_date, :]
         self.factor = a
 
 

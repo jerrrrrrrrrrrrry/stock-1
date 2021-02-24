@@ -23,6 +23,8 @@ class HFVolPowerMean(SingleFactor):
         n = 20
         vol_mean = vol.rolling(n).mean()
         a = vol_mean
+        a = a.loc[a.index >= self.start_date, :]
+        a = a.loc[a.index <= self.end_date, :]
         self.factor = a
 
 

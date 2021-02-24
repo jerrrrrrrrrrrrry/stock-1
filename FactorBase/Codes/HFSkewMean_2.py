@@ -30,6 +30,8 @@ class HFSkewMean(SingleFactor):
         n = 20
         skew_mean = skew.rolling(n).mean()
         a = skew_mean
+        a = a.loc[a.index >= self.start_date, :]
+        a = a.loc[a.index <= self.end_date, :]
         self.factor = a
 
 
