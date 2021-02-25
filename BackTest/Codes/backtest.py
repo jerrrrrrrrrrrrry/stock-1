@@ -50,7 +50,7 @@ def main():
         r_hat = r_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
     stock_num = 30
-    turn_rate = 0.2
+    turn_rate = 0.1
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))

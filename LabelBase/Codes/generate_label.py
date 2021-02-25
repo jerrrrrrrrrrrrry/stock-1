@@ -36,15 +36,17 @@ def main(stocks=None):
     yiziban = (HIGH == LOW) & (HIGH > CLOSE.shift())
     
     y = OPEN.shift(-2) - OPEN.shift(-1)
-    r = OPEN.shift(-2) - OPEN.shift(-1)
+    r = CLOSE.shift(-1) - CLOSE
     def list_n_na(s, n):
         for i in range(n):
             s.loc[s.first_valid_index()] = np.nan
         return s
     n = 20
     y = y.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
+    r = r.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
     
     y[st|no_liquid|yiziban|tingpai] = np.nan
+    r[st|no_liquid|yiziban|tingpai] = np.nan
     
     y.to_csv('../Data/y.csv')
     r.to_csv('../Data/r.csv')

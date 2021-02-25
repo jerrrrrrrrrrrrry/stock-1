@@ -20,10 +20,11 @@ from pandas import Series, DataFrame
 import datetime
 def main():
     halflife = 1
-    turn_rate = 0.2
+    turn_rate = 0.1
     n = 20
     #get y
-    y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    y = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     
     #get factor
     files = os.listdir('%s/Data/'%gc.FACTORBASE_PATH)
