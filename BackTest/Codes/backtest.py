@@ -27,9 +27,9 @@ def main():
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['CORRMarket', 'ROE', 'DEP', 'Amount', 'Close', 'ChipsCV', 'CloseToAverage', 'HK', 'MC', 'RQPM', 'Sigma', 'Skew', 'TurnRate', 'EP'])
+    factors.extend(['CORRMarket', 'ROE', 'DEP', 'Close', 'CloseToAverage', 'MC', 'RQPM', 'Sigma', 'EP'])
     factors.extend(['HFPriceVolCorrMean', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
-
+    
     factors = list(set(factors))
     print(factors)
     #获取股票超额收益的预测值
@@ -50,7 +50,7 @@ def main():
         r_hat = r_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
     
     stock_num = 30
-    turn_rate = 0.1
+    turn_rate = 0.2
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
