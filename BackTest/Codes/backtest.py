@@ -23,13 +23,13 @@ import matplotlib.pyplot as plt
 def main():
     begin_date = '20200209'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210224'
+    end_date = '20210225'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['CORRMarket', 'ROE', 'DEP', 'Close', 'CloseToAverage', 'MC', 'RQPM', 'Sigma', 'EP'])
+    factors.extend(['Beta', 'CORRMarket', 'DEP', 'CloseToAverage', 'RQPM', 'Sigma', 'EP'])
     factors.extend(['HFPriceVolCorrMean', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
-    
+
     factors = list(set(factors))
     print(factors)
     #获取股票超额收益的预测值
@@ -84,12 +84,14 @@ def main():
         
         df_rank_pre_position.loc[date, :] = [{stock:pre_rank.loc[stock]} for stock in pre_rank.index]
         df_rank_position.loc[date, :] = [{stock:rank.loc[stock]} for stock in rank.index]
-        
+
         position.sort()
         df_position.loc[date, :] = position
         df_pnl.loc[date, :] = r.loc[date, position].values
         pre_date = date
+    
     pnl = df_pnl.mean(1)
+    
     pnl.fillna(r.mean(1), inplace=True)
     r_hat.to_csv('%s/Results/r_hat.csv'%gc.BACKTEST_PATH)
     
@@ -103,10 +105,36 @@ def main():
     df_pnl.to_csv('%s/Results/df_pnl.csv'%gc.BACKTEST_PATH)
     pnl.to_csv('%s/Results/pnl.csv'%gc.BACKTEST_PATH)
     
+    r_hat = r_hat.loc[r.index, r.columns]
+    
+    plt.figure(figsize=(16,12))
+    IC = r_hat.corrwith(r, method='spearman', axis=1)
+    IC.cumsum().plot()
+    plt.savefig('../Results/IC.png')
+    
+    plt.figure(figsize=(16, 12))
+    num_group = 30
+    factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
+    #factor_quantile[r.isna()] = np.nan
+    group_backtest = {}
+    group_pos = {}
+    for n in range(num_group):
+        group_pos[n] = DataFrame((n/num_group <= factor_quantile) & (factor_quantile <= (n+1)/num_group))
+        group_pos[n][~group_pos[n]] = np.nan
+        group_pos[n] = 1 * group_pos[n]
+        group_backtest[n] = ((group_pos[n] * r).mean(1) - r.mean(1)).cumsum().rename('%s'%(n/num_group))
+        group_backtest[n].plot()
+    plt.legend(['%s'%i for i in range(num_group)])
+    plt.savefig('../Results/groupbacktest.png')
+    
+    plt.figure(figsize=(16, 12))
+    group_hist = [group_backtest[i].iloc[np.where(group_backtest[i].notna())[0][-1]] for i in range(num_group)]
+    plt.bar(range(num_group), group_hist)
+    plt.savefig('../Results/grouphist.png')
+    
     plt.figure(figsize=(16,12))
     pnl.cumsum().plot()
     r.mean(1).cumsum().plot()
-    
     (pnl - r.mean(1)).cumsum().plot()
     plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
     plt.savefig('%s/Results/backtest.png'%gc.BACKTEST_PATH)

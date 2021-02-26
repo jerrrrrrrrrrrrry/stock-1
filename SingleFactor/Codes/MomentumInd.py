@@ -38,9 +38,10 @@ class MomentumInd(SingleFactor):
         a = DataFrame(0, index=r.index, columns=r.columns)
         for ind_file in ind_files:
             ind_df = pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, ind_file), index_col=[0], parse_dates=[0])
-            ind_df = ind_df.loc[r.index, r.columns]
-            ind_df[ind_df==0] = np.nan
-            a = a.add(ind_df.mul((r * ind_df).mean(1), axis=0), fill_value=0)
+            ind_df = ind_df.loc[r.index, :]
+            if ind_df.iloc[-1, :].mean() > 0.05:
+                ind_df[ind_df==0] = np.nan
+                a = a.add(ind_df.mul((r * ind_df).mean(1), axis=0), fill_value=0)
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = tools.standardize(a)
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = MomentumInd('MomentumInd', stocks=stocks, start_date='20200101', end_date='20210101')
+    a = MomentumInd('MomentumInd', stocks=stocks, start_date='20200101', end_date='20210224')
     
     a.generate_factor()
     
