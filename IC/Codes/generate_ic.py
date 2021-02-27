@@ -19,19 +19,19 @@ from pandas import Series, DataFrame
 
 import datetime
 def main():
-    halflife = 20
-    turn_rate = 0.2
-    n = int(1 / turn_rate)
+    # halflife = 20
+    # turn_rate = 0.2
+    n = 10
     #get y
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     y = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    lag = 1
+    # lag = 1
     #get factor
     files = os.listdir('%s/Data/'%gc.FACTORBASE_PATH)
     files = list(filter(lambda x:x[0] > '9', files))
     factors = {file[:-4]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]) for file in files}
     
-    ic_list = [DataFrame({factor:factors[factor].corrwith(y.shift(-n), method='spearman', axis=1) for factor in factors.keys()}) for n in range(n)]
+    ic_list = [DataFrame({factor:factors[factor].corrwith(y.shift(-n), method='pearson', axis=1) for factor in factors.keys()}) for n in range(n)]
     
     trade_cal = tools.get_trade_cal(start_date='20200101', end_date=datetime.datetime.today().strftime('%Y%m%d'))
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
@@ -39,113 +39,67 @@ def main():
     dates = list(filter(lambda x:x in trade_cal, dates))
     ic_list = [ic.loc[dates, :] for ic in ic_list]
     
-    def f(df_list, turn_rate=0.1):
-        s = 1 / turn_rate * (1 + turn_rate) / 2
-        mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
-        #var = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
+    for n in range((len(ic_list))):
+        ic_list[n].to_csv('../Results/IC_%s.csv'%n)
+    
+    # def f(df_list, turn_rate=0.1):
+    #     s = 1 / turn_rate * (1 + turn_rate) / 2
+    #     mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
+    #     #var = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
         
-        for i in range(len(df_list)):
-            mean = mean + df_list[i] * (1 - i * turn_rate)
-        mean = mean / s
+    #     for i in range(len(df_list)):
+    #         mean = mean + df_list[i] * (1 - i * turn_rate)
+    #     mean = mean / s
         
-        #for i in range(len(df_list)):
-        #    var = var + (df_list[i] - mean)**2 * q**i
-        #var = var / q_sum
-        #std = np.sqrt(var)
-        #t = mean
-        ret = mean
-        return ret
-    # for n in range(len(ic_list)):
-    #     ic_list[n] = ic_list[n].shift(n)
-    # ic = f(ic_list, turn_rate)
-    # ic_hat = ic.ewm(halflife=halflife).mean().shift()
-    # ir_hat = (ic.ewm(halflife=halflife).mean() / ic.ewm(halflife=halflife).std()).shift()
+    #     #for i in range(len(df_list)):
+    #     #    var = var + (df_list[i] - mean)**2 * q**i
+    #     #var = var / q_sum
+    #     #std = np.sqrt(var)
+    #     #t = mean
+    #     ret = mean
+    #     return ret
+    # # for n in range(len(ic_list)):
+    # #     ic_list[n] = ic_list[n].shift(n)
+    # # ic = f(ic_list, turn_rate)
+    # # ic_hat = ic.ewm(halflife=halflife).mean().shift()
+    # # ir_hat = (ic.ewm(halflife=halflife).mean() / ic.ewm(halflife=halflife).std()).shift()
     
-    ic_hat_list = [ic_list[n].ewm(halflife=halflife).mean().shift(n+lag) for n in range(len(ic_list))]
-    ir_hat_list = [(ic_list[n].ewm(halflife=halflife).mean() / ic_list[n].ewm(halflife=halflife).std()).shift(n+lag) for n in range(len(ic_list))]
-    ic_hat = f(ic_hat_list, turn_rate)
-    ir_hat = f(ir_hat_list, turn_rate)
+    # #ic_hat_list = [ic_list[n].ewm(halflife=halflife).mean().shift(n+lag) for n in range(len(ic_list))]
+    # ir_hat_list = [(ic_list[n].ewm(halflife=halflife).mean() / ic_list[n].ewm(halflife=halflife).std()).shift(n+lag) for n in range(len(ic_list))]
     
-    ic_hat.to_csv('%s/Results/IC_hat.csv'%gc.IC_PATH)
-    ir_hat.to_csv('%s/Results/IR_hat.csv'%gc.IC_PATH)
-    '''
-    for i in range(len(ic_list)):
-        ic_list[i].to_csv('%s/Results/IC_%s.csv'%(gc.IC_PATH, i))
-        ic_hat_list[i].to_csv('%s/Results/IC_hat_%s.csv'%(gc.IC_PATH, i))
-    '''
-    '''
-    #get y
-    y1 = pd.read_csv('%s/Data/y1.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y2 = pd.read_csv('%s/Data/y2.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y3 = pd.read_csv('%s/Data/y3.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y4 = pd.read_csv('%s/Data/y4.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y5 = pd.read_csv('%s/Data/y5.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y6 = pd.read_csv('%s/Data/y6.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y7 = pd.read_csv('%s/Data/y7.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y8 = pd.read_csv('%s/Data/y8.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y9 = pd.read_csv('%s/Data/y9.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    y10 = pd.read_csv('%s/Data/y10.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    # ic_mean_hat_list = [ic_list[n].ewm(halflife=halflife).mean().shift(n+lag) for n in range(len(ic_list))]
+    # ic_std_hat_list = [ic_list[n].ewm(halflife=halflife).std().shift(n+lag) for n in range(len(ic_list))]
     
-    #get factor
-    files = os.listdir('%s/Data/'%gc.FACTORBASE_PATH)
-    files = list(filter(lambda x:x[0] > '9', files))
-    factors = {file[:-4]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]) for file in files}
+    # ic_cov_hat_list = [ic_list[n].ewm(halflife=halflife).cov().shift(len(ic_list[0].columns)*(n+lag)) for n in range(len(ic_list))]
     
-    #y = y1 + 0.7 * y2.shift() + 0.49 * y3.shift(2) + 0.49*0.7 * y4.shift(3) + 0.49*0.49 * y5.shift(4)
+    # weight_list = [DataFrame(index=ic_mean_hat_list[n].index, columns=ic_mean_hat_list[n].columns) for n in range(len(ic_mean_hat_list))]
+    # for date in dates:
+    #     for n in range(len(weight_list)):
+    #         weight_list[n].loc[date, :] = np.linalg.inv(100*np.eye(len(ic_cov_hat_list[n].loc[date, :, :])) + ic_cov_hat_list[n].loc[date, :, :].values).dot(ic_mean_hat_list[n].loc[date, :].values.reshape(-1, 1)).reshape(1, -1)
+            
+    #         #print(ic_cov_hat_list[n].loc[date,:,:])
+    #         print(date, n)
+    #         # print(np.linalg.inv(ic_cov_hat_list[n].loc[date, :, :]))
+    #         # print(ic_mean_hat_list[n].loc[date, :])
+    #         # print(weight_list[n].loc[date, :])
+    #         print('---------------------')
+    # weight = f(weight_list, turn_rate)
+    # weight.to_csv('%s/Results/weight.csv'%gc.IC_PATH)
     
-    ic1 = DataFrame({factor:factors[factor].corrwith(y1, method='spearman', axis=1) for factor in factors.keys()})
-    ic2 = DataFrame({factor:factors[factor].corrwith(y2, method='spearman', axis=1) for factor in factors.keys()})
-    ic3 = DataFrame({factor:factors[factor].corrwith(y3, method='spearman', axis=1) for factor in factors.keys()})
-    ic4 = DataFrame({factor:factors[factor].corrwith(y4, method='spearman', axis=1) for factor in factors.keys()})
-    ic5 = DataFrame({factor:factors[factor].corrwith(y5, method='spearman', axis=1) for factor in factors.keys()})
-    ic6 = DataFrame({factor:factors[factor].corrwith(y6, method='spearman', axis=1) for factor in factors.keys()})
-    ic7 = DataFrame({factor:factors[factor].corrwith(y7, method='spearman', axis=1) for factor in factors.keys()})
-    ic8 = DataFrame({factor:factors[factor].corrwith(y8, method='spearman', axis=1) for factor in factors.keys()})
-    ic9 = DataFrame({factor:factors[factor].corrwith(y9, method='spearman', axis=1) for factor in factors.keys()})
-    ic10 = DataFrame({factor:factors[factor].corrwith(y10, method='spearman', axis=1) for factor in factors.keys()})
-    trade_cal = tools.get_trade_cal(start_date='20200101', end_date=datetime.datetime.today().strftime('%Y%m%d'))
-    trade_cal = [pd.Timestamp(i) for i in trade_cal]
-    dates = ic1.index
-    dates = list(filter(lambda x:x in trade_cal, dates))
-    ic1 = ic1.loc[dates, :]
-    ic2 = ic2.loc[dates, :]
-    ic3 = ic3.loc[dates, :]
-    ic4 = ic4.loc[dates, :]
-    ic5 = ic5.loc[dates, :]
-    ic6 = ic6.loc[dates, :]
-    ic7 = ic7.loc[dates, :]
-    ic8 = ic8.loc[dates, :]
-    ic9 = ic9.loc[dates, :]
-    ic10 = ic10.loc[dates, :]
+    # #ic_cov_hat_inv_list = [[np.linalg.inv(ic_cov_hat.loc[ind, :, :]) for ind in ic_cov_hat.index] for ic_cov_hat in ic_cov_hat_list]
     
-    #ic = DataFrame({factor:factors[factor].corrwith(y, method='spearman', axis=1) for factor in factors.keys()})
+    # #ic_cov_hat_inv_list = [DataFrame([np.linalg.inv(ic_cov_hat.loc[ind, :, :]) for ind in ic_cov_hat.index], index=ic_cov_hat.index, columns=ic_cov_hat.columns) for ic_cov_hat in ic_cov_hat_list]
+
+    # #ir_hat_list = [ic_cov_hat_inv_list[n].dot(ic_mean_hat_list[n]).shift(n+lag) for n in range(len(ic_mean_hat_list))]
     
-    turn_rate = 0.2
-    w = 1 - turn_rate
-    m = ic1 + w * ic2.shift() + w**2 * ic3.shift(2) + w**3 * ic4.shift(3) + w**4 * ic5.shift(4) + w**5 * ic6.shift(5) + w**6 * ic7.shift(6) + w**7 * ic8.shift(7) + w**8 * ic9.shift(8) + w**9 * ic10.shift(9)
-    s = np.sqrt((ic1-m)**2 + w * (ic2.shift()-m)**2 + w**2 * (ic3.shift(2)-m)**2 + w**3 * (ic4.shift(3)-m)**2 + w**4 * (ic5.shift(4)-m)**2 + w**5 * (ic6.shift(5)-m)**2 + w**6 * (ic7.shift(6)-m)**2 + w**7 * (ic8.shift(7)-m)**2 + w**8 * (ic9.shift(8)-m)**2 + w**9 * (ic10.shift(9)-m)**2)
-    ic = m / s
-    #ic1_hat = ic1.ewm(halflife=20).mean().shift(2)
-    #ic2_hat = ic2.ewm(halflife=20).mean().shift(3)
-    #ic3_hat = ic3.ewm(halflife=20).mean().shift(4)
-    #ic4_hat = ic4.ewm(halflife=20).mean().shift(5)
-    #ic5_hat = ic5.ewm(halflife=20).mean().shift(6)
+    # #print(ic_list[0].ewm(halflife=halflife).cov())
+    # #ir_hat_list = [(np.linalg.inv(ic_list[n].ewm(halflife=halflife).cov()) % ic_list[n].ewm(halflife=halflife).mean()).shift(n+lag) for n in range(len(ic_list))]
     
-    #ic = ic1.add(0.7 * ic2, fill_value=0).add(0.7**2 * ic3, fill_value=0).add(0.7**3 * ic4, fill_value=0).add(0.7**4 * ic5, fill_value=0)
-    #ic = ic1
-    ic1.to_csv('%s/Results/IC1.csv'%gc.IC_PATH)
-    ic2.to_csv('%s/Results/IC2.csv'%gc.IC_PATH)
-    ic3.to_csv('%s/Results/IC3.csv'%gc.IC_PATH)
-    ic4.to_csv('%s/Results/IC4.csv'%gc.IC_PATH)
-    ic5.to_csv('%s/Results/IC5.csv'%gc.IC_PATH)
-    ic.to_csv('%s/Results/IC.csv'%gc.IC_PATH)
+    # # ic_hat = f(ic_hat_list, turn_rate)
+    # ir_hat = f(ir_hat_list, turn_rate)
     
-    ic_hat = ic.ewm(halflife=20).mean().shift(2) / ic.ewm(halflife=20).std().shift(2)
-    #ic_hat = ic.ewm(halflife=20).mean().shift(2)
-    #ic_hat = ic1_hat + 0.7 * ic2_hat + 0.7**2 * ic3_hat + 0.7**3 * ic4_hat + 0.7**4 * ic5_hat
-    
-    #ic_hat = ic.rolling(60).mean().shift(6)
-    ic_hat.to_csv('%s/Results/IC_hat.csv'%gc.IC_PATH)
-    '''
+    # # ic_hat.to_csv('%s/Results/IC_hat.csv'%gc.IC_PATH)
+    # ir_hat.to_csv('%s/Results/IR_hat.csv'%gc.IC_PATH)
+
 if __name__ == '__main__':
     main()

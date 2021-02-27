@@ -23,34 +23,72 @@ import matplotlib.pyplot as plt
 def main():
     begin_date = '20200209'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210225'
+    end_date = '20210226'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['Beta', 'CORRMarket', 'DEP', 'CloseToAverage', 'RQPM', 'Sigma', 'EP'])
+    factors.extend(['Beta', 'CORRMarket', 'MC', 'DEP', 'CloseToAverage', 'Sigma', 'EP'])
     factors.extend(['HFPriceVolCorrMean', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
-    factors = list(set(factors))
-    print(factors)
-    #获取股票超额收益的预测值
-    IC_hat = pd.read_csv('%s/Results/IC_hat.csv'%gc.IC_PATH, index_col=[0], parse_dates=[0])
-    IC_hat = IC_hat.loc[IC_hat.index>=begin_date, :]
-    IC_hat = IC_hat.loc[IC_hat.index<=end_date, :]
-    
     r = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
     r = r.loc[r.index>=begin_date, :]
     r = r.loc[r.index<=end_date, :]
+    
+    factors = list(set(factors))
+    print(factors)
+    
+    halflife = 20
+    lag = 1
+    turn_rate = 0.2
+    n = int(1 / turn_rate)
+    ic_list = []
+    for i in range(n):
+        ic_list.append(pd.read_csv('%s/Results/IC_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+    
+    ic_mean_hat_list = [ic_list[n].ewm(halflife=halflife).mean().shift(n+lag) for n in range(len(ic_list))]
+    #ic_std_hat_list = [ic_list[n].ewm(halflife=halflife).std().shift(n+lag) for n in range(len(ic_list))]
+    ic_cov_hat_list = [ic_list[n].ewm(halflife=halflife).cov().shift(len(ic_list[0].columns)*(n+lag)) for n in range(len(ic_list))]
+    
+    weight_list = [DataFrame(index=ic_mean_hat_list[n].index, columns=ic_mean_hat_list[n].columns) for n in range(len(ic_mean_hat_list))]
+    for date in r.index:
+        for n in range(len(weight_list)):
+            weight_list[n].loc[date, :] = np.linalg.inv(0.001*np.eye(len(ic_cov_hat_list[n].loc[date, :, :])) + ic_cov_hat_list[n].loc[date, :, :].values).dot(ic_mean_hat_list[n].loc[date, :].values)
+    ic_cov_hat_list[0].to_csv('../Results/ic_cov.csv')
+            # print(ic_cov_hat_list[n].loc[date,:,:])
+            # print(date, n)
+            # print(np.linalg.inv(ic_cov_hat_list[n].loc[date, :, :]))
+            # print(ic_mean_hat_list[n].loc[date, :])
+            # print(weight_list[n].loc[date, :])
+            # print('---------------------')
+    
+    def f(df_list, turn_rate=0.2):
+        s = 1 / turn_rate * (1 + turn_rate) / 2
+        # s = 1 - (1 - turn_rate) ** 10
+        mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
+        
+        for i in range(len(df_list)):
+            mean = mean + df_list[i] * (1 - i * turn_rate)
+            # mean = mean + df_list[i] * (1 - turn_rate)**i
+            
+        mean = mean / s
+        
+        ret = mean
+        return ret
+    
+    weight = f(weight_list, turn_rate)
+    weight = weight.loc[weight.index>=begin_date, :]
+    weight = weight.loc[weight.index<=end_date, :]
+    weight.to_csv('../Results/weight.csv')
     
     r_hat = DataFrame(0, index=trade_cal, columns=r.columns)
     for factor in factors:
         factor_df = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
         factor_df = factor_df.loc[factor_df.index>=begin_date, :]
         factor_df = factor_df.loc[factor_df.index<=end_date, :]
-        r_hat = r_hat.add(factor_df.mul(IC_hat.loc[:, factor], axis=0), fill_value=0)
+        r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
     
     stock_num = 30
-    turn_rate = 0.2
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
@@ -108,12 +146,12 @@ def main():
     r_hat = r_hat.loc[r.index, r.columns]
     
     plt.figure(figsize=(16,12))
-    IC = r_hat.corrwith(r, method='spearman', axis=1)
+    IC = r_hat.corrwith(r, method='pearson', axis=1)
     IC.cumsum().plot()
     plt.savefig('../Results/IC.png')
     
     plt.figure(figsize=(16, 12))
-    num_group = 30
+    num_group = 10
     factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
     #factor_quantile[r.isna()] = np.nan
     group_backtest = {}
