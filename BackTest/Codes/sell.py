@@ -10,9 +10,12 @@ import pandas as pd
 import datetime
 
 def main():
-    position = ['049', '074', '094', 106, 163, 169, 184, 194, 221, 281, 289, 301, 312, 326, 375, 405, 424, 437, 462, 489, 506, 611, 736, 742, 859]
+    position = ['049', '074', '094', 106, 146, 147, 163, 184, 194, 246, 261, 280, 284, 326, 375, 395, 405, 424, 437, 462, 464, 511, 611, 653, 684, 735, 736, 739, 767, 875]
+    
     position = ['300'+str(s)+'.SZ' for s in position]
-    date =  '20210225'
+    print(position)
+    print(len(position))
+    date =  '20210226'
     r_hat = pd.read_csv('../Results/r_hat.csv', index_col=[0], parse_dates=[0])
     
     rank = r_hat.loc[date, :].rank().loc[position].sort_values(ascending=False)

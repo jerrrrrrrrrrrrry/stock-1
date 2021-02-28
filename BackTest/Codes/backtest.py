@@ -41,7 +41,7 @@ def main():
     halflife = 20
     lag = 1
     turn_rate = 0.2
-    n = int(1 / turn_rate)
+    n = 10
     ic_list = []
     for i in range(n):
         ic_list.append(pd.read_csv('%s/Results/IC_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
@@ -64,12 +64,12 @@ def main():
     
     def f(df_list, turn_rate=0.2):
         s = 1 / turn_rate * (1 + turn_rate) / 2
-        # s = 1 - (1 - turn_rate) ** 10
+        s = 1 - (1 - turn_rate) ** 10
         mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
         
         for i in range(len(df_list)):
             mean = mean + df_list[i] * (1 - i * turn_rate)
-            # mean = mean + df_list[i] * (1 - turn_rate)**i
+            mean = mean + df_list[i] * (1 - turn_rate)**i
             
         mean = mean / s
         
@@ -151,7 +151,7 @@ def main():
     plt.savefig('../Results/IC.png')
     
     plt.figure(figsize=(16, 12))
-    num_group = 50
+    num_group = 20
     factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
     #factor_quantile[r.isna()] = np.nan
     group_backtest = {}
@@ -175,7 +175,14 @@ def main():
     r.mean(1).cumsum().plot()
     (pnl - r.mean(1)).cumsum().plot()
     plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
-    plt.savefig('%s/Results/backtest.png'%gc.BACKTEST_PATH)
+    plt.savefig('%s/Results/backtest_sum.png'%gc.BACKTEST_PATH)
+    
+    plt.figure(figsize=(16,12))
+    (1+pnl).cumprod().plot()
+    (1+r.mean(1)).cumprod().plot()
+    ((1+pnl).cumprod() / (1+r.mean(1)).cumprod()).plot()
+    plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
+    plt.savefig('%s/Results/backtest_prod.png'%gc.BACKTEST_PATH)
     #begin end
     #股票排序
     #按换手率生成持仓
