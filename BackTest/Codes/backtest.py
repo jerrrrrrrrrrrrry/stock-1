@@ -23,12 +23,12 @@ import matplotlib.pyplot as plt
 def main():
     begin_date = '20200209'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210226'
+    end_date = '20210303'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['Beta', 'CORRMarket', 'MC', 'DEP', 'CloseToAverage', 'Sigma', 'EP'])
-    factors.extend(['HFPriceVolCorrMean', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
+    factors.extend(['STTGGY', 'CORRMarket', 'DEP', 'MC', 'CloseToAverage', 'Sigma', 'EP'])
+    factors.extend(['HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
     r = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
@@ -38,10 +38,10 @@ def main():
     factors = list(set(factors))
     print(factors)
     
-    halflife = 20
+    halflife = 5
     lag = 1
-    turn_rate = 0.2
-    n = 10
+    turn_rate = 0.1
+    n = 5
     ic_list = []
     for i in range(n):
         ic_list.append(pd.read_csv('%s/Results/IC_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
@@ -53,22 +53,14 @@ def main():
     weight_list = [DataFrame(index=ic_mean_hat_list[n].index, columns=ic_mean_hat_list[n].columns) for n in range(len(ic_mean_hat_list))]
     for date in r.index:
         for n in range(len(weight_list)):
-            weight_list[n].loc[date, :] = np.linalg.inv(0.001*np.eye(len(ic_cov_hat_list[n].loc[date, :, :])) + ic_cov_hat_list[n].loc[date, :, :].values).dot(ic_mean_hat_list[n].loc[date, :].values)
+            weight_list[n].loc[date, :] = np.linalg.inv(0.1*np.eye(len(ic_cov_hat_list[n].loc[date, :, :])) + ic_cov_hat_list[n].loc[date, :, :].values).dot(ic_mean_hat_list[n].loc[date, :].values)
     ic_cov_hat_list[0].to_csv('../Results/ic_cov.csv')
-            # print(ic_cov_hat_list[n].loc[date,:,:])
-            # print(date, n)
-            # print(np.linalg.inv(ic_cov_hat_list[n].loc[date, :, :]))
-            # print(ic_mean_hat_list[n].loc[date, :])
-            # print(weight_list[n].loc[date, :])
-            # print('---------------------')
     
     def f(df_list, turn_rate=0.2):
-        s = 1 / turn_rate * (1 + turn_rate) / 2
-        s = 1 - (1 - turn_rate) ** 10
+        s = 1 - (1 - turn_rate) ** len(df_list)
         mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
         
         for i in range(len(df_list)):
-            mean = mean + df_list[i] * (1 - i * turn_rate)
             mean = mean + df_list[i] * (1 - turn_rate)**i
             
         mean = mean / s
@@ -146,12 +138,12 @@ def main():
     r_hat = r_hat.loc[r.index, r.columns]
     
     plt.figure(figsize=(16,12))
-    IC = r_hat.corrwith(r, method='pearson', axis=1)
+    IC = r_hat.fillna(0).corrwith(r.fillna(0), method='spearman', axis=1)
     IC.cumsum().plot()
     plt.savefig('../Results/IC.png')
     
     plt.figure(figsize=(16, 12))
-    num_group = 20
+    num_group = 30
     factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
     #factor_quantile[r.isna()] = np.nan
     group_backtest = {}

@@ -21,6 +21,11 @@ def main(start_date, end_date):
     else:
         time_delta = datetime.timedelta(days=0)
         
+    start_date = datetime.datetime.strptime(start_date, '%Y%m%d') - time_delta
+    end_date = datetime.datetime.strptime(end_date, '%Y%m%d') - time_delta
+    start_date = start_date.strftime('%Y%m%d')
+    end_date = end_date.strftime('%Y%m%d')
+    print(start_date)
     industrys = {k:industrys[k] for k in industrys.keys()}
     stocks = []
     for v in industrys.values():
@@ -49,7 +54,10 @@ def main(start_date, end_date):
         flag = 0
         if not os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, p.split('.')[0][:-2])):
             start_date_tmp = start_date
-            start_date = '20200901'
+            if p[:2] == 'HF':
+                start_date = '20200901'
+            else:
+                start_date = '20200101'
             flag = 1
         exec('from %s import %s'%(p.split('.')[0], p.split('.')[0][:-2]))
         factor = eval('%s("%s", stocks, start_date, end_date)'%(p.split('.')[0][:-2], p.split('.')[0][:-2]))
@@ -61,7 +69,10 @@ def main(start_date, end_date):
         flag = 0
         if not os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, p.split('.')[0][:-2])):
             start_date_tmp = start_date
-            start_date = '20200901'
+            if p[:2] == 'HF':
+                start_date = '20200901'
+            else:
+                start_date = '20200101'
             flag = 1
         exec('from %s import %s'%(p.split('.')[0], p.split('.')[0][:-2]))
         factor = eval('%s("%s", stocks, start_date, end_date)'%(p.split('.')[0][:-2], p.split('.')[0][:-2]))

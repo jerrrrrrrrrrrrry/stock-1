@@ -2,44 +2,42 @@
 # coding: utf-8
 
 #%%
-import os
 import sys
-import time
 import datetime
 import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-
 import tushare as ts
-
+import os
 import Config
 sys.path.append(Config.GLOBALCONFIG_PATH)
 from SingleFactor import SingleFactor
 import Global_Config as gc
 import tools
-
 #%%
 
-class DEP(SingleFactor):
+class HFUID(SingleFactor):
     def generate_factor(self):
-        a = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'PETTMNPAAEI'] for stock in self.stocks})
-        a = 1 / a
-        a = a.diff(60)
+        std = pd.read_csv('%s/Data/HFStd.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        n = 20
+        uid = std.rolling(n).std() / std.rolling(n).mean()
+        a = uid
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
 
+
+
 #%%
-#获取股票
 if __name__ == '__main__':
+    #获取股票
     stocks = tools.get_stocks()
-    
-    
-    a = DEP('DEP', stocks=stocks, start_date='20200101', end_date='20210221')
+
+    a = HFUID('HFUID', stocks=stocks, start_date='20200901', end_date='20210128')
     
     a.generate_factor()
     
     a.factor_analysis()
+    
     

@@ -33,12 +33,13 @@ class DBP(SingleFactor):
 
 #%%
 #获取股票
-stocks = tools.get_stocks()
-
-
-a = DBP('DBP', stocks=stocks, start_date='20200101', end_date='20210221')
-
-a.generate_factor()
-
-a.factor_analysis()
-
+if __name__ == '__main__':
+    stocks = tools.get_stocks()
+    
+    
+    a = DBP('DBP', stocks=stocks, start_date='20200101', end_date='20210221')
+    
+    a.generate_factor()
+    
+    a.factor_analysis()
+    

@@ -21,17 +21,40 @@ import datetime
 def main():
     # halflife = 20
     # turn_rate = 0.2
-    n = 10
+    n = 20
     #get y
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     y = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    
+    stocks = list(y.columns)
+    industrys = tools.get_industrys('L1', stocks)
+    tmp = {}
+    for k in industrys.keys():
+        if len(industrys[k]) > 0:
+            tmp[k] = industrys[k]
+    industrys = tmp
+    
+    y_neutral_ind = tools.standardize_industry(y, industrys)
+    
+    market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in stocks})
+    market_capitalization = np.log(market_capitalization)
+    market_capitalization = market_capitalization.loc[y.index.dropna(), :]
+    market_capitalization = tools.standardize_industry(market_capitalization, industrys)
+    beta = (y_neutral_ind * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
+    y_neutral_mc = y_neutral_ind - market_capitalization.mul(beta, axis=0)
+    
+    
     # lag = 1
     #get factor
     files = os.listdir('%s/Data/'%gc.FACTORBASE_PATH)
     files = list(filter(lambda x:x[0] > '9', files))
     factors = {file[:-4]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]) for file in files}
     
-    ic_list = [DataFrame({factor:factors[factor].corrwith(y.shift(-n), method='pearson', axis=1) for factor in factors.keys()}) for n in range(n)]
+    
+    no_industry_neutral_list = ['MomentumInd']
+    no_mc_neutral_list = ['MC']
+    
+    ic_list = [DataFrame({factor: (factors[factor].corrwith(y.rolling(n).sum().shift(-n), method='pearson', axis=1) if factor in no_industry_neutral_list else factors[factor].corrwith(y_neutral_ind.rolling(n).sum().shift(-n), method='pearson', axis=1) if factor in no_mc_neutral_list else factors[factor].corrwith(y_neutral_mc.rolling(n).sum().shift(-n), method='pearson', axis=1)) for factor in factors.keys()}) for n in range(1, 1+n)]
     
     trade_cal = tools.get_trade_cal(start_date='20200101', end_date=datetime.datetime.today().strftime('%Y%m%d'))
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
@@ -42,6 +65,21 @@ def main():
     for n in range((len(ic_list))):
         ic_list[n].to_csv('../Results/IC_%s.csv'%n)
     
+    # n = 20
+    # r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    # # lag = 1
+    # #get factor
+    # files = os.listdir('%s/Data/'%gc.FACTORBASE_PATH)
+    # files = list(filter(lambda x:x[0] > '9', files))
+    # factors = {file[:-4]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]) for file in files}
+    
+    # no_industry_neutral_list = ['MomentumInd']
+    # no_mc_neutral_list = ['MC']
+    
+    # ic_list = []
+    # for factor in factors.keys():
+    #     if factor in no_industry_neutral_list:
+    #         ic = factors[factor].corrwith(r.rolling(-n).sum())
     # def f(df_list, turn_rate=0.1):
     #     s = 1 / turn_rate * (1 + turn_rate) / 2
     #     mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)

@@ -24,14 +24,16 @@ import Global_Config as gc
 import tools
 #%%
 
-class HFSkew(SingleFactor):
+class HFStd(SingleFactor):
     def generate_factor(self):
         
         trade_cal = tools.get_trade_cal(self.start_date, self.end_date)
-        skew = DataFrame()
+        std = DataFrame()
         for date in trade_cal:
-            r_daily = DataFrame()
-            files = os.listdir('%s/StockSnapshootData/%s'%(gc.DATABASE_PATH, date))
+            if os.path.exists('%s/StockSnapshootData/%s'%(gc.DATABASE_PATH, date)):
+                files = os.listdir('%s/StockSnapshootData/%s'%(gc.DATABASE_PATH, date))
+            else:
+                continue
             data_dic = {file.split('.')[1]:pd.read_csv('%s/StockSnapshootData/%s/%s'%(gc.DATABASE_PATH, date, file), index_col=[0], parse_dates=[0]) for file in files}
 
             keys = list(data_dic.keys())
@@ -43,12 +45,11 @@ class HFSkew(SingleFactor):
             price = price.loc[(price.index>='%s093000'%(date.replace('-', ''))) & (price.index<'%s150100'%(date.replace('-', ''))), :]
             r_daily = np.log(price).diff()
             r_daily.fillna(0, inplace=True)
-            std_daily = r_daily.resample(rule='5T').sum().skew()
-            skew = pd.concat([skew, DataFrame({date:std_daily}).T], axis=0)
-
-        a = skew
+            std_daily = r_daily.resample(rule='5T').sum().std()
+            std = pd.concat([std, DataFrame({date:std_daily}).T], axis=0)
+        n = 20
+        a = std
         self.factor = a
-
     def update_factor(self):
         self.generate_factor()
         factor = self.factor
@@ -88,12 +89,13 @@ class HFSkew(SingleFactor):
         factor.sort_index(axis=1, inplace=True)
         factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
 
+
 #%%
 if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
 
-    a = HFSkew('HFSkew', stocks=stocks, start_date='20200901', end_date='20210128')
+    a = HFStd('HFStd', stocks=stocks, start_date='20200901', end_date='20210228')
     
     a.generate_factor()
     
