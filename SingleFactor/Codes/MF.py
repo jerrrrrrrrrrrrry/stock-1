@@ -38,7 +38,7 @@ class MF(SingleFactor):
         sm_mf.fillna(0, inplace=True)
         net_mf.fillna(0, inplace=True)
         
-        mf = sm_mf + 0.33*md_mf - 0.33*lg_mf - elg_mf
+        mf = sm_mf - 0.33*md_mf - 0.67*lg_mf - elg_mf
         cols = list(filter(lambda x:x[0]=='3', mf.columns))
         mf = mf.loc[:, cols]
         

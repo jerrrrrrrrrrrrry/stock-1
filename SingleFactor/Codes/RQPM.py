@@ -25,8 +25,8 @@ class RQPM(SingleFactor):
         rqpm.index = [ind.strftime('%Y-%m-%d %H:%M:%S').split(' ')[0].replace('-', '') for ind in rqpm.index]
         rqpm.drop('time', axis=1, inplace=True)
         rqpm.columns = [col+'.SZ' for col in rqpm.columns]
-        
-        a = rqpm.rolling(2).mean()
+        rqpm.fillna(method='ffill', inplace=True)
+        a = rqpm
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
 
-    a = RQPM('RQPM', stocks=stocks, start_date='20201201', end_date='20210224')
+    a = RQPM('RQPM', stocks=stocks, start_date='20201201', end_date='20210302')
     
     a.generate_factor()
     

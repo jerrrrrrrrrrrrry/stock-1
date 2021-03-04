@@ -21,7 +21,7 @@ import datetime
 def main():
     # halflife = 20
     # turn_rate = 0.2
-    n = 20
+    n = 10
     #get y
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     y = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
@@ -54,7 +54,7 @@ def main():
     no_industry_neutral_list = ['MomentumInd']
     no_mc_neutral_list = ['MC']
     
-    ic_list = [DataFrame({factor: (factors[factor].corrwith(y.rolling(n).sum().shift(-n), method='pearson', axis=1) if factor in no_industry_neutral_list else factors[factor].corrwith(y_neutral_ind.rolling(n).sum().shift(-n), method='pearson', axis=1) if factor in no_mc_neutral_list else factors[factor].corrwith(y_neutral_mc.rolling(n).sum().shift(-n), method='pearson', axis=1)) for factor in factors.keys()}) for n in range(1, 1+n)]
+    ic_list = [DataFrame({factor: (factors[factor].corrwith(y.rolling(n).sum().shift(-n+1), method='pearson', axis=1) if factor in no_industry_neutral_list else factors[factor].corrwith(y_neutral_ind.rolling(n).sum().shift(-n+1), method='pearson', axis=1) if factor in no_mc_neutral_list else factors[factor].corrwith(y_neutral_mc.rolling(n).sum().shift(-n+1), method='pearson', axis=1)) for factor in factors.keys()}) for n in range(1, 1+n)]
     
     trade_cal = tools.get_trade_cal(start_date='20200101', end_date=datetime.datetime.today().strftime('%Y%m%d'))
     trade_cal = [pd.Timestamp(i) for i in trade_cal]

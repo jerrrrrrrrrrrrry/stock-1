@@ -41,7 +41,7 @@ def main(stocks=None):
         for i in range(n):
             s.loc[s.first_valid_index()] = np.nan
         return s
-    n = 20
+    n = 60
     y = y.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
     r = r.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
     

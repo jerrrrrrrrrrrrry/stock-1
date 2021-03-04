@@ -44,19 +44,19 @@ class ChipsCV(SingleFactor):
         
         m1 = (average_price**1 * p).cumsum() / cum_p
         m2 = (average_price**2 * p).cumsum() / cum_p
-        #m3 = (average_price**3 * p).cumsum() / cum_p
+        m3 = (average_price**3 * p).cumsum() / cum_p
         #m4 = (average_price**4 * p).cumsum() / cum_p
         
         #v1 = 0
         v2 = m2 - m1**2
         v2[v2<1e-6] = np.nan
-        #v3 = m3 - 3*m2*m1 + 2*m1**3
+        v3 = m3 - 3*m2*m1 + 2*m1**3
         #v4 = m4 - 4*m3*m1 + 6*m2*m1**2 - 3*m1**4
         
         #a = CLOSE / m1
         a = v2 / m1
         a = np.log(a)
-        #a = v3 / (v2**1.5)
+        a = v3 / (v2**1.5)
         #a = v4 / (v2**3) - 3
         
         a = a.loc[a.index >= self.start_date, :]
@@ -66,8 +66,8 @@ class ChipsCV(SingleFactor):
 #%%
 if __name__ == '__main__':
     stocks = tools.get_stocks()
-    
-    a = ChipsCV('ChipsCV', stocks=stocks, start_date='20200101', end_date='20201230')
+    stocks = list(filter(lambda x:x!='300950.SZ', stocks))
+    a = ChipsCV('ChipsCV', stocks=stocks, start_date='20200101', end_date='20210228')
     
     a.generate_factor()
     
