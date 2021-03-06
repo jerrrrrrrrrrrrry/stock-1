@@ -20,6 +20,7 @@ import tools
 class HFUID(SingleFactor):
     def generate_factor(self):
         std = pd.read_csv('%s/Data/HFStd.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        std.fillna(method='ffill', inplace=True)
         n = 20
         uid = std.rolling(n).std() / std.rolling(n).mean()
         a = uid

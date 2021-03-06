@@ -27,6 +27,7 @@ import tools
 class HFSkewMean(SingleFactor):
     def generate_factor(self):
         skew = pd.read_csv('%s/Data/HFSkew.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        skew.fillna(method='ffill', inplace=True)
         n = 20
         skew_mean = skew.rolling(n).mean()
         a = skew_mean

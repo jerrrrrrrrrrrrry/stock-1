@@ -20,6 +20,7 @@ import tools
 class HFReversalMean(SingleFactor):
     def generate_factor(self):
         reversal = pd.read_csv('%s/Data/HFReversal.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        reversal.fillna(method='ffill', inplace=True)
         n = 20
         reversal_mean = reversal.rolling(n).mean()
         a = reversal_mean

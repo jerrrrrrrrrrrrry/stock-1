@@ -20,6 +20,7 @@ import tools
 class HFPriceVolCorrMean(SingleFactor):
     def generate_factor(self):
         corr = pd.read_csv('%s/Data/HFPriceVolCorr.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        corr.fillna(method='ffill', inplace=True)
         n = 20
         corr_mean = corr.rolling(n).mean()
         

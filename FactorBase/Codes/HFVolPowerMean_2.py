@@ -20,6 +20,7 @@ import tools
 class HFVolPowerMean(SingleFactor):
     def generate_factor(self):
         vol = pd.read_csv('%s/Data/HFVolPower.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        vol.fillna(method='ffill', inplace=True)
         n = 20
         vol_mean = vol.rolling(n).mean()
         a = vol_mean

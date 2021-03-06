@@ -23,12 +23,12 @@ import matplotlib.pyplot as plt
 def main():
     begin_date = '20200410'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210304'
+    end_date = '20210305'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['MC', 'STTGGY', 'CORRMarket', 'EP', 'DEP', 'CloseToAverage', 'Sigma'])
-    factors.extend(['HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
+    factors.extend(['MC', 'STTGGY', 'CORRMarket', 'ROE', 'EP', 'DEP', 'CloseToAverage', 'Sigma'])
+    factors.extend(['HFPriceVolCorrMean', 'HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
     r = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
@@ -80,9 +80,10 @@ def main():
         factor_df = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
         factor_df = factor_df.loc[factor_df.index>=begin_date, :]
         factor_df = factor_df.loc[factor_df.index<=end_date, :]
+        factor_df.fillna(method='ffill', inplace=True)
         r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
     
-    stock_num = 40
+    stock_num = 30
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
@@ -145,7 +146,7 @@ def main():
     plt.savefig('../Results/IC.png')
     
     plt.figure(figsize=(16, 12))
-    num_group = 10
+    num_group = 20
     factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
     #factor_quantile[r.isna()] = np.nan
     group_backtest = {}
@@ -163,6 +164,11 @@ def main():
     group_hist = [group_backtest[i].iloc[np.where(group_backtest[i].notna())[0][-1]] for i in range(num_group)]
     plt.bar(range(num_group), group_hist)
     plt.savefig('../Results/grouphist.png')
+    
+    plt.figure(figsize=(16,12))
+    r.mad(1).cumsum().plot()
+    plt.legend(['DIV'])
+    plt.savefig('%s/Results/DIV.png'%gc.BACKTEST_PATH)
     
     plt.figure(figsize=(16,12))
     pnl.cumsum().plot()

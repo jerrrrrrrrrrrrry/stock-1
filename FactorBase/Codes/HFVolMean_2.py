@@ -20,6 +20,7 @@ import tools
 class HFVolMean(SingleFactor):
     def generate_factor(self):
         vol = pd.read_csv('%s/Data/HFVol.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+        vol.fillna(method='ffill', inplace=True)
         n = 20
         vol_mean = vol.rolling(n).mean()
         a = vol_mean
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
 
-    a = HFVol('HFVol', stocks=stocks, start_date='20200901', end_date='20210128')
+    a = HFVolMean('HFVolMean', stocks=stocks, start_date='20200901', end_date='20210128')
     
     a.generate_factor()
     
