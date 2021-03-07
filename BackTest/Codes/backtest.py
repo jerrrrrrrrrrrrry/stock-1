@@ -83,7 +83,7 @@ def main():
         factor_df.fillna(method='ffill', inplace=True)
         r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
     
-    stock_num = 30
+    stock_num = 50
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
