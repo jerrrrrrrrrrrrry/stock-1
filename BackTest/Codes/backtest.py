@@ -23,11 +23,11 @@ import matplotlib.pyplot as plt
 def main():
     begin_date = '20200410'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210305'
+    end_date = '20210308'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['MC', 'STTGGY', 'CORRMarket', 'ROE', 'EP', 'DEP', 'CloseToAverage', 'Sigma'])
+    factors.extend(['MC', 'STTGGY', 'CORRMarket', 'ROE', 'Earning', 'DEP', 'CloseToAverage', 'Sigma'])
     factors.extend(['HFPriceVolCorrMean', 'HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
     r = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
@@ -83,7 +83,7 @@ def main():
         factor_df.fillna(method='ffill', inplace=True)
         r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
     
-    stock_num = 50
+    stock_num = 30
     trade_num = int(stock_num * turn_rate)
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
@@ -146,7 +146,7 @@ def main():
     plt.savefig('../Results/IC.png')
     
     plt.figure(figsize=(16, 12))
-    num_group = 20
+    num_group = 100
     factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
     #factor_quantile[r.isna()] = np.nan
     group_backtest = {}
