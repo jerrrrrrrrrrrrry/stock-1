@@ -24,7 +24,7 @@ import tools
 #%%
 
 
-class HK(SingleFactor):
+class DHK(SingleFactor):
     def generate_factor(self):
         CLOSE = DataFrame({stock: pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
         
@@ -40,8 +40,22 @@ class HK(SingleFactor):
         hk = hk.shift().loc[CLOSE.index, :]
         hk_hold = DataFrame(0, index=CLOSE.index, columns=self.stocks)
         hk_hold.loc[hk.index, hk.columns] = hk
-        hk_hold.fillna(method='ffill', inplace=True)
-        a = hk_hold * CLOSE
+        
+        hk_amount = hk_hold * CLOSE
+        hk_amount = hk_amount.sub(hk_amount.mean(1), axis=0)
+        hk_amount.fillna(0, inplace=True)
+        hk_amount = hk_amount.div(hk_amount.std(1), axis=0)
+        
+        dhk = hk_amount.diff(20)
+        dhk = dhk.sub(dhk.mean(1), axis=0)
+        dhk.fillna(0, inplace=True)
+        dhk = dhk.div(dhk.std(1), axis=0)
+        def f(y, x):
+            beta = y.corrwith(x, axis=1) * y.std(1) / x.std(1)
+            alpha = y.mean(1) - x.mean(1) * beta
+            e = y.sub(x.mul(beta, axis=0).add(alpha, axis=0), axis=0)
+            return e
+        a = f(dhk, hk_amount)
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
@@ -53,7 +67,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = HK('HK', stocks=stocks, start_date='20200101', end_date='20210301')
+    a = DHK('DHK', stocks=stocks, start_date='20200101', end_date='20210301')
     
     a.generate_factor()
     

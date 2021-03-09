@@ -36,7 +36,7 @@ class EP(SingleFactor):
 stocks = tools.get_stocks()
 
 
-a = EP('EP', stocks=stocks, start_date='20200101', end_date='20201010')
+a = EP('EP', stocks=stocks, start_date='20200101', end_date='20210301')
 
 a.generate_factor()
 
