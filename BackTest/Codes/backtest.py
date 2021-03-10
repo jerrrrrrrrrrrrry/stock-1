@@ -21,13 +21,17 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 
 def main():
-    begin_date = '20200410'
+    begin_date = '20200210'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210309'
+    end_date = '20210310'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['MC', 'STTGGY', 'CORRMarket', 'ROE', 'EP', 'DEP', 'CloseToAverage', 'Sigma'])
+    factors.extend(['MC'])
+    factors.extend(['ROE', 'EP', 'DEP'])
+    factors.extend(['MomentumWeighted', 'STTGGY', 'CloseToAverage'])
+    factors.extend(['CORRMarket'])
+    factors.extend(['ZF', 'Sigma'])
     factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
@@ -53,7 +57,8 @@ def main():
     ic_mean_hat_list = [ic_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_list))]
     ic_std_hat_list = [ic_list[n].ewm(halflife=halflife_cov).std().shift(n+lag) for n in range(len(ic_list))]
     ic_cov_hat_list = [ic_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_list[0].columns)*(n+lag)) for n in range(len(ic_list))]
-    
+    ic_corr_est = ic_list[0].ewm(halflife=halflife_cov).corr().shift(len(ic_list[0].columns)*(0+lag))
+    ic_corr_est.to_csv('../Results/IC_CORR.csv')
     weight_list = [DataFrame(index=ic_mean_hat_list[n].index, columns=ic_mean_hat_list[n].columns) for n in range(len(ic_mean_hat_list))]
     for date in r.index:
         for n in range(len(weight_list)):
@@ -64,12 +69,9 @@ def main():
     def f(df_list, turn_rate=0.2):
         s = 1 - (1 - turn_rate) ** len(df_list)
         mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
-        
         for i in range(len(df_list)):
             mean = mean + df_list[i] * ((1 - turn_rate)**i + (1 - i * turn_rate)) / 2
-            
         mean = mean / s
-        
         ret = mean
         return ret
     
@@ -89,7 +91,7 @@ def main():
     stock_num = 30
     trade_num = int(stock_num * turn_rate)
     
-    num_group = 100
+    num_group = 10
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
@@ -177,15 +179,17 @@ def main():
     plt.bar(range(num_group), group_hist)
     plt.savefig('../Results/grouphist.png')
     
-    plt.figure(figsize=(16,12))
-    r.mad(1).cumsum().plot()
-    plt.legend(['DIV'])
-    plt.savefig('%s/Results/DIV.png'%gc.BACKTEST_PATH)
+    # plt.figure(figsize=(16,12))
+    # r.mad(1).cumsum().plot()
+    # plt.legend(['DIV'])
+    # plt.savefig('%s/Results/DIV.png'%gc.BACKTEST_PATH)
     
     plt.figure(figsize=(16,12))
     pnl.cumsum().plot()
     r.mean(1).cumsum().plot()
     (pnl - r.mean(1)).cumsum().plot()
+    alpha = pnl - r.mean(1)
+    print(alpha.mean()/alpha.std())
     plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
     plt.savefig('%s/Results/backtest_sum.png'%gc.BACKTEST_PATH)
     

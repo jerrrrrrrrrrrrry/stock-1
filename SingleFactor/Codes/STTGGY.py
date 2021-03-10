@@ -39,9 +39,10 @@ class STTGGY(SingleFactor):
         n = 20
         def f(r_rolling, tr):
             ind = r_rolling.index
-            tr_tmp = tr.loc[ind].rank()
+            tr_tmp = tr.loc[ind].rank() / 5
             tr_tmp = tr_tmp - tr_tmp.mean()
-            return (r_rolling * tr_tmp).mean()
+            w = 1 / (1 + np.exp(-tr_tmp)) - 0.5
+            return (r_rolling * w).mean()
         dates = [datetime.datetime.strptime(date, '%Y%m%d') for date in dates]
         sttg = DataFrame(index=dates, columns=CLOSE.columns)
         for stock in sttg.columns:

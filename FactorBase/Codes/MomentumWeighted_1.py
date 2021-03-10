@@ -34,7 +34,6 @@ class MomentumWeighted(SingleFactor):
         w = np.arange(250) / 25
         w = w - w[60]
         w = 1 / (1 + np.exp(-w)) - 0.5
-        print(w)
         def f(r, w):
             ret = (r.values.flatten() * w[-len(r):]).sum()
             return ret
