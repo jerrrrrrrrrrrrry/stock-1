@@ -30,7 +30,10 @@ def main():
     factors.extend(['MC', 'STTGGY', 'CORRMarket', 'ROE', 'EP', 'DEP', 'CloseToAverage', 'Sigma'])
     factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
 
-    r = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    #r_rinei = pd.read_csv('%s/Data/r_rinei.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    #r_geye = pd.read_csv('%s/Data/r_geye.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
     r = r.loc[r.index>=begin_date, :]
     r = r.loc[r.index<=end_date, :]
@@ -83,8 +86,10 @@ def main():
         factor_df.fillna(method='ffill', inplace=True)
         r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
     
-    stock_num = 50
+    stock_num = 30
     trade_num = int(stock_num * turn_rate)
+    
+    num_group = 100
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
@@ -119,7 +124,15 @@ def main():
         df_rank_position.loc[date, :] = [{stock:rank.loc[stock]} for stock in rank.index]
 
         position.sort()
+        
+        #buy = list(set(position) - set(pre_position))
+        #sell = list(set(pre_position) - set(position))
+        #zuocang = list(set(position) - set(buy))
+        
         df_position.loc[date, :] = position
+        #df_pnl.loc[date, :] = r.loc[date, position].values
+        #df_pnl.loc[date, buy] = r_rinei.loc[date, buy].values
+        #df_pnl.loc[date, zuocang] = r.loc[date, zuocang].values
         df_pnl.loc[date, :] = r.loc[date, position].values
         pre_date = date
     
@@ -146,7 +159,6 @@ def main():
     plt.savefig('../Results/IC.png')
     
     plt.figure(figsize=(16, 12))
-    num_group = 10
     factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
     #factor_quantile[r.isna()] = np.nan
     group_backtest = {}

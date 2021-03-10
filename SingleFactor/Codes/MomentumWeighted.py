@@ -22,13 +22,36 @@ import tools
 
 #%%
 
-class Momentum(SingleFactor):
+class MomentumWeighted(SingleFactor):
     def generate_factor(self):
         CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
         ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
-        CLOSE = CLOSE * ADJ
+        CLOSE = np.log(CLOSE * ADJ)
         CLOSE.fillna(method='ffill', inplace=True)
-        a = np.log(CLOSE).diff(5)
+        r = CLOSE.diff()
+        r.fillna(method='ffill', inplace=True)
+        r.fillna(0, inplace=True)
+        w = np.arange(250) / 25
+        w = w - w[60]
+        w = 1 / (1 + np.exp(-w)) - 0.5
+        print(w)
+        def f(r, w):
+            ret = (r.values.flatten() * w[-len(r):]).sum()
+            return ret
+        a = r.rolling(250, min_periods=1).apply(func=f, args=(w,))
+        a = a
+        # n0 = 0
+        # n1 = 5
+        # n2 = 20
+        # n3 = 60
+        # n4 = 120
+        # n5 = 250
+        # r1 = CLOSE.diff(n1-n0).shift(n0) / (n1-n0)
+        # r2 = CLOSE.diff(n2-n1).shift(n1) / (n2-n1)
+        # r3 = CLOSE.diff(n3-n2).shift(n2) / (n3-n2)
+        # r4 = CLOSE.diff(n4-n3).shift(n3) / (n4-n3)
+        # r5 = CLOSE.diff(n5-n4).shift(n4) / (n5-n4)
+        # a = r4
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
@@ -41,7 +64,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = Momentum('Momentum', stocks=stocks, start_date='20200101', end_date='20210301')
+    a = MomentumWeighted('MomentumWeighted', stocks=stocks, start_date='20200101', end_date='20210301')
     
     a.generate_factor()
     

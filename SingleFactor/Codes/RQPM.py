@@ -38,7 +38,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
 
-    a = RQPM('RQPM', stocks=stocks, start_date='20201201', end_date='20210302')
+    a = RQPM('RQPM', stocks=stocks, start_date='20201201', end_date='20210305')
     
     a.generate_factor()
     
