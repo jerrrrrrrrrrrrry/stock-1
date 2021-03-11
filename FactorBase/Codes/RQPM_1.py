@@ -20,10 +20,7 @@ import tools
 class RQPM(SingleFactor):
     def generate_factor(self):
         rqpm = pd.read_csv('%s/StockRQPMData/RQPMTHS.csv'%(gc.DATABASE_PATH), index_col=[0], parse_dates=[0])
-        rqpm.loc[:, 'time'] = [ind.strftime('%Y-%m-%d %H:%M:%S').split(' ')[1] for ind in rqpm.index]
-        rqpm = rqpm.loc[rqpm.time=='23:00:00', :]
-        rqpm.index = [ind.strftime('%Y-%m-%d %H:%M:%S').split(' ')[0].replace('-', '') for ind in rqpm.index]
-        rqpm.drop('time', axis=1, inplace=True)
+        rqpm.fillna(method='ffill', inplace=True)
         rqpm.columns = [col+'.SZ' for col in rqpm.columns]
         a = rqpm
         a = a.loc[a.index >= self.start_date, :]
@@ -37,10 +34,10 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
 
-    a = RQPM('RQPM', stocks=stocks, start_date='20201201', end_date='20210122')
+    a = RQPM('RQPM', stocks=stocks, start_date='20201201', end_date='20210305')
     
     a.generate_factor()
     
-    a.factor_analysis()
+    a.factor_analysis(num_group=10)
     
     

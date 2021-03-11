@@ -69,12 +69,17 @@ class MomentumInd(SingleFactor):
         self.factor.fillna(0, inplace=True)
         factor = tools.standardize(self.factor)
         if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
-            factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])
-            factor = pd.concat([factor_old, factor.loc[factor.index>factor.index[-1], :]], axis=0)
-            factor.sort_index(axis=0, inplace=True)
-            factor.sort_index(axis=1, inplace=True)
+            # if isinstance(factor.index[0], str):
+            #     factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])
+            #     factor_old.index = [str(i) for i in factor_old.index]
+            # else:
+            #     factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
+            factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
+            
+            factor = pd.concat([factor_old.loc[factor_old.index<factor.index[0], :], factor], axis=0)
+            #factor.sort_index(axis=0, inplace=True)
+        factor.sort_index(axis=1, inplace=True)
         factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
-#%%
 
 
 if __name__ == '__main__':

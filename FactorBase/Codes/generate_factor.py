@@ -62,7 +62,7 @@ def main(start_date, end_date):
         exec('from %s import %s'%(p.split('.')[0], p.split('.')[0][:-2]))
         factor = eval('%s("%s", stocks, start_date, end_date)'%(p.split('.')[0][:-2], p.split('.')[0][:-2]))
         factor.update_factor()
-        if flag:
+        if flag == 1:
             start_date = start_date_tmp
     #生成合成因子
     for p in factors_2:
@@ -77,7 +77,7 @@ def main(start_date, end_date):
         exec('from %s import %s'%(p.split('.')[0], p.split('.')[0][:-2]))
         factor = eval('%s("%s", stocks, start_date, end_date)'%(p.split('.')[0][:-2], p.split('.')[0][:-2]))
         factor.update_factor()
-        if flag:
+        if flag == 1:
             start_date = start_date_tmp
             
             

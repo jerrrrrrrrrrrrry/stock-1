@@ -19,20 +19,23 @@ import pandas as pd
 from pandas import Series, DataFrame
 
 import matplotlib.pyplot as plt
+import statsmodels.tsa.api as tsa
 
 def main():
     begin_date = '20200210'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210310'
+    end_date = '20210311'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
     factors.extend(['MC'])
-    factors.extend(['ROE', 'EP', 'DEP'])
+    factors.extend(['ROE', 'EP', 'DEP', 'BP'])
     factors.extend(['MomentumWeighted', 'STTGGY', 'CloseToAverage'])
     factors.extend(['CORRMarket'])
-    factors.extend(['ZF', 'Sigma'])
-    factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
+    factors.extend(['Sigma', 'ZF'])
+    factors.extend(['RQPM'])
+    #factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
+    factors.extend(['HFReversalMean', 'HFVolPowerMean', 'HFUID', 'HFSkewMean'])
 
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
@@ -46,7 +49,7 @@ def main():
     print(factors)
     
     halflife_mean = 20
-    halflife_cov = 60
+    halflife_cov = 120
     lag = 1
     turn_rate = 0.1
     n = 10
@@ -189,7 +192,7 @@ def main():
     r.mean(1).cumsum().plot()
     (pnl - r.mean(1)).cumsum().plot()
     alpha = pnl - r.mean(1)
-    print(alpha.mean()/alpha.std())
+    print(alpha.mean()/alpha.std() * np.sqrt(250))
     plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
     plt.savefig('%s/Results/backtest_sum.png'%gc.BACKTEST_PATH)
     
