@@ -5,9 +5,7 @@ Created on Tue Feb 23 22:53:44 2021
 @author: admin
 """
 
-import numpy as np
 import pandas as pd
-import datetime
 
 def main():
     position = [16, 26, 34, 47, 88, 92]

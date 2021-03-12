@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 
-import datetime
 def main():
     # halflife = 20
     # turn_rate = 0.2
@@ -39,7 +38,7 @@ def main():
     market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in stocks})
     market_capitalization = np.log(market_capitalization)
     market_capitalization = market_capitalization.loc[y.index.dropna(), :]
-    market_capitalization = tools.standardize_industry(market_capitalization, industrys)
+    market_capitalization = tools.standardize(market_capitalization)
     beta = (y_neutral_ind * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
     y_neutral_mc = y_neutral_ind - market_capitalization.mul(beta, axis=0)
     

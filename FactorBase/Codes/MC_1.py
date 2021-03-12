@@ -44,20 +44,20 @@ class MC(SingleFactor):
                     tmp[k] = industrys[k]
             industrys = tmp
             factor = tools.standardize_industry(self.factor, industrys)
-        #if 'market_capitalization' in self.neutral_list:
-        if False:
-            market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
-            market_capitalization = np.log(market_capitalization)
-            if self.start_date:
-                market_capitalization = market_capitalization.loc[market_capitalization.index >= self.start_date, :]
-            if self.end_date:
-                market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
-            #if 'industry' in self.neutral_list:
-            if True:
-                market_capitalization = tools.standardize_industry(market_capitalization, industrys)
-            beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
-            factor = factor - market_capitalization.mul(beta, axis=0)
-        self.factor.fillna(0, inplace=True)
+        # #if 'market_capitalization' in self.neutral_list:
+        # if False:
+        #     market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
+        #     market_capitalization = np.log(market_capitalization)
+        #     if self.start_date:
+        #         market_capitalization = market_capitalization.loc[market_capitalization.index >= self.start_date, :]
+        #     if self.end_date:
+        #         market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
+        #     #if 'industry' in self.neutral_list:
+        #     if True:
+        #         market_capitalization = tools.standardize_industry(market_capitalization, industrys)
+        #     beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
+        #     factor = factor - market_capitalization.mul(beta, axis=0)
+        factor.fillna(0, inplace=True)
         if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
             if isinstance(factor.index[0], str):
                 factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])

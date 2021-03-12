@@ -2,7 +2,6 @@
 import datetime
 import os
 import sys
-import pickle
 from scipy.stats import rankdata
 import numpy as np
 import pandas as pd
@@ -159,8 +158,9 @@ class SingleFactor:
             if self.end_date:
                 market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
             #if 'industry' in self.neutral_list:
-            if True:
-                market_capitalization = tools.standardize_industry(market_capitalization, industrys)
+            # if True:
+            #     market_capitalization = tools.standardize_industry(market_capitalization, industrys)
+            market_capitalization = tools.standardize(market_capitalization)
             beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
             factor = factor - market_capitalization.mul(beta, axis=0)
         # factor.fillna(0, inplace=True)

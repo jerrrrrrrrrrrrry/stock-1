@@ -24,19 +24,19 @@ import statsmodels.tsa.api as tsa
 def main():
     begin_date = '20200210'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210311'
+    end_date = '20210312'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['MC'])
+    factors.extend(['MC', 'Close'])
     factors.extend(['ROE', 'EP', 'DEP', 'BP'])
     factors.extend(['MomentumWeighted', 'STTGGY', 'CloseToAverage'])
     factors.extend(['CORRMarket'])
     factors.extend(['Sigma', 'ZF'])
-    factors.extend(['RQPM'])
+    #factors.extend(['RQPM'])
     #factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
     factors.extend(['HFReversalMean', 'HFVolPowerMean', 'HFUID', 'HFSkewMean'])
-
+    factors.extend(['TurnRate'])
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     #r_rinei = pd.read_csv('%s/Data/r_rinei.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
