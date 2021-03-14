@@ -24,8 +24,10 @@ import tools
 
 class ROE(SingleFactor):
     def generate_factor(self):
-        pe = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'PETTMNPAAEI'] for stock in self.stocks})
-        pb = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'PB'] for stock in self.stocks})
+        data = {stock:pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]) for stock in self.stocks}
+        
+        pe = DataFrame({stock:data[stock].loc[:, 'PETTMNPAAEI'] for stock in self.stocks})
+        pb = DataFrame({stock:data[stock].loc[:, 'PB'] for stock in self.stocks})
         
         a = pb / pe
         

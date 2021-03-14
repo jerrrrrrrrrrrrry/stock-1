@@ -24,8 +24,11 @@ import tools
 
 class Earning(SingleFactor):
     def generate_factor(self):
-        pe = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'PETTMNPAAEI'] for stock in self.stocks})
-        mc = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
+        data = {stock:pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]) for stock in self.stocks}
+        
+        pe = DataFrame({stock:data[stock].loc[:, 'PETTMNPAAEI'] for stock in self.stocks})
+        mc = DataFrame({stock:data[stock].loc[:, 'TOTMKTCAP'] for stock in self.stocks})
+        
         a = mc / pe
             
         a = a.loc[a.index >= self.start_date, :]

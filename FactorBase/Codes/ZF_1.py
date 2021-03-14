@@ -25,20 +25,13 @@ import tools
 
 class ZF(SingleFactor):
     def generate_factor(self):
-        dates = tools.get_trade_cal(self.start_date, self.end_date)
-        OPEN = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'open'] for stock in self.stocks})
-        HIGH = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'high'] for stock in self.stocks})
-        LOW = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'low'] for stock in self.stocks})
-        CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
-        ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
-        OPEN = OPEN * ADJ
-        OPEN.fillna(method='ffill', inplace=True)
-        HIGH = HIGH * ADJ
+        data = {stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]) for stock in self.stocks}
+        
+        HIGH = DataFrame({stock:data[stock].loc[:, 'high'] for stock in self.stocks})
+        LOW = DataFrame({stock:data[stock].loc[:, 'low'] for stock in self.stocks})
+        
         HIGH.fillna(method='ffill', inplace=True)
-        LOW = LOW * ADJ
         LOW.fillna(method='ffill', inplace=True)
-        CLOSE = CLOSE * ADJ
-        CLOSE.fillna(method='ffill', inplace=True)
         
         # SYX = HIGH - (OPEN + CLOSE + np.abs(OPEN-CLOSE)) / 2
         # XYX = (OPEN + CLOSE - np.abs(OPEN-CLOSE)) / 2 - LOW

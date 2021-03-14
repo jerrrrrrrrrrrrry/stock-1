@@ -11,17 +11,12 @@ sys.path.append(Config.GLOBALCONFIG_PATH)
 import Global_Config as gc
 import tools
 
-date = datetime.datetime.today().strftime('%Y%m%d')
-trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
-if len(trade_cal) == 0:
-    sys.exit()
-    
 today = datetime.datetime.today().strftime('%Y%m%d')
 
 if len(sys.argv) > 1:
     start = sys.argv[1]
 else:
-    start = '20200101'
+    start = '20170101'
 end = today
 
 pro = ts.pro_api()

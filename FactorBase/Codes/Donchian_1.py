@@ -23,8 +23,10 @@ import tools
 #%%
 class Donchian(SingleFactor):
     def generate_factor(self):
-        CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
-        ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
+        data = {stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]) for stock in self.stocks}
+        
+        CLOSE = DataFrame({stock:data[stock].loc[:, 'close'] for stock in self.stocks})
+        ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
         n = 60
         UP = CLOSE.rolling(n).max()

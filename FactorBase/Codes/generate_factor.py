@@ -55,9 +55,10 @@ def main(start_date, end_date):
         if not os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, p.split('.')[0][:-2])):
             start_date_tmp = start_date
             if p[:2] == 'HF':
+                continue
                 start_date = '20200901'
             else:
-                start_date = '20200101'
+                start_date = '20170101'
             flag = 1
         exec('from %s import %s'%(p.split('.')[0], p.split('.')[0][:-2]))
         factor = eval('%s("%s", stocks, start_date, end_date)'%(p.split('.')[0][:-2], p.split('.')[0][:-2]))
@@ -70,9 +71,10 @@ def main(start_date, end_date):
         if not os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, p.split('.')[0][:-2])):
             start_date_tmp = start_date
             if p[:2] == 'HF':
+                continue
                 start_date = '20200901'
             else:
-                start_date = '20200101'
+                start_date = '20170101'
             flag = 1
         exec('from %s import %s'%(p.split('.')[0], p.split('.')[0][:-2]))
         factor = eval('%s("%s", stocks, start_date, end_date)'%(p.split('.')[0][:-2], p.split('.')[0][:-2]))
@@ -94,8 +96,8 @@ if __name__ == '__main__':
         date = datetime.datetime.today().strftime('%Y%m%d')
         trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
         if len(trade_cal) == 0:
-            #pass
-            sys.exit()
+            pass
+            #sys.exit()
     else:
         print('date?')
         exit()

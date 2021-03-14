@@ -20,7 +20,7 @@ from pandas import Series, DataFrame
 def main():
     # halflife = 20
     # turn_rate = 0.2
-    n = 10
+    n = 20
     #get y
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     y = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
@@ -55,14 +55,46 @@ def main():
     
     ic_list = [DataFrame({factor: (factors[factor].corrwith(y.rolling(n).sum().shift(-n+1), method='pearson', axis=1) if factor in no_industry_neutral_list else factors[factor].corrwith(y_neutral_ind.rolling(n).sum().shift(-n+1), method='pearson', axis=1) if factor in no_mc_neutral_list else factors[factor].corrwith(y_neutral_mc.rolling(n).sum().shift(-n+1), method='pearson', axis=1)) for factor in factors.keys()}) for n in range(1, 1+n)]
     
-    trade_cal = tools.get_trade_cal(start_date='20200101', end_date=datetime.datetime.today().strftime('%Y%m%d'))
+    ic_pos_list = []
+    ic_neg_list = []
+    for i in range(1, n+1):
+        dic_pos_df = {}
+        dic_neg_df = {}
+        
+        for factor in factors.keys():
+            if factor in no_industry_neutral_list:
+                y_pos = y.rolling(i).sum().shift(1-i).copy()
+            elif factor in no_mc_neutral_list:
+                y_pos = y_neutral_ind.rolling(i).sum().shift(1-i).copy()
+            else:
+                y_pos = y_neutral_mc.rolling(i).sum().shift(1-i).copy()
+            y_neg = y_pos.copy()
+            x_pos = factors[factor].copy()
+            x_neg = x_pos.copy()
+            
+            y_pos[x_pos<=0] = np.nan
+            y_neg[x_neg>=0] = np.nan
+            
+            x_pos[x_pos<=0] = np.nan
+            x_neg[x_neg>=0] = np.nan
+            
+            dic_pos_df[factor] = x_pos.corrwith(y_pos, method='pearson', axis=1)
+            dic_neg_df[factor] = x_neg.corrwith(y_neg, method='pearson', axis=1)
+        ic_pos_list.append(DataFrame(dic_pos_df))
+        ic_neg_list.append(DataFrame(dic_neg_df))
+        
+    trade_cal = tools.get_trade_cal(start_date='20170701', end_date=datetime.datetime.today().strftime('%Y%m%d'))
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     dates = ic_list[0].index
     dates = list(filter(lambda x:x in trade_cal, dates))
     ic_list = [ic.loc[dates, :] for ic in ic_list]
+    ic_pos_list = [ic.loc[dates, :] for ic in ic_pos_list]
+    ic_neg_list = [ic.loc[dates, :] for ic in ic_neg_list]
     
     for n in range((len(ic_list))):
         ic_list[n].to_csv('../Results/IC_%s.csv'%n)
+        ic_pos_list[n].to_csv('../Results/IC_POS_%s.csv'%n)
+        ic_neg_list[n].to_csv('../Results/IC_NEG_%s.csv'%n)
     
     # n = 20
     # r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])

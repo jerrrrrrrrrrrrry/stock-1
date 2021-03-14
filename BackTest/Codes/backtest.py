@@ -22,21 +22,23 @@ import matplotlib.pyplot as plt
 import statsmodels.tsa.api as tsa
 
 def main():
-    begin_date = '20200210'
+    begin_date = '20180101'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
     end_date = '20210312'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    factors.extend(['MC', 'Close'])
-    factors.extend(['ROE', 'EP', 'DEP', 'BP'])
-    factors.extend(['MomentumWeighted', 'STTGGY', 'CloseToAverage'])
+    #factors.extend(['MC', 'MCNL'])
+    factors.extend(['MC'])
+    factors.extend(['TurnRate'])
+    factors.extend(['ROE', 'EP', 'DEP'])
+    factors.extend(['MomentumInd'])
+    factors.extend(['ChipsCV', 'MomentumWeighted', 'CloseToAverage'])
     factors.extend(['CORRMarket'])
     factors.extend(['Sigma', 'ZF'])
     #factors.extend(['RQPM'])
     #factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean', 'HFVolPowerMean'])
-    factors.extend(['HFReversalMean', 'HFVolPowerMean', 'HFUID', 'HFSkewMean'])
-    factors.extend(['TurnRate'])
+    #factors.extend(['HFStdMean', 'HFReversalMean', 'HFVolPowerMean', 'HFUID', 'HFSkewMean'])
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     #r_rinei = pd.read_csv('%s/Data/r_rinei.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
@@ -49,23 +51,41 @@ def main():
     print(factors)
     
     halflife_mean = 20
-    halflife_cov = 120
+    halflife_cov = 60
     lag = 1
     turn_rate = 0.1
     n = 10
     ic_list = []
+    ic_pos_list = []
+    ic_neg_list = []
     for i in range(n):
         ic_list.append(pd.read_csv('%s/Results/IC_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        ic_pos_list.append(pd.read_csv('%s/Results/IC_POS_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        ic_neg_list.append(pd.read_csv('%s/Results/IC_NEG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
     
     ic_mean_hat_list = [ic_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_list))]
+    ic_pos_mean_hat_list = [ic_pos_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_pos_list))]
+    ic_neg_mean_hat_list = [ic_neg_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_neg_list))]
+    
     ic_std_hat_list = [ic_list[n].ewm(halflife=halflife_cov).std().shift(n+lag) for n in range(len(ic_list))]
+    ic_pos_std_hat_list = [ic_pos_list[n].ewm(halflife=halflife_cov).std().shift(n+lag) for n in range(len(ic_pos_list))]
+    ic_neg_std_hat_list = [ic_neg_list[n].ewm(halflife=halflife_cov).std().shift(n+lag) for n in range(len(ic_neg_list))]
+
     ic_cov_hat_list = [ic_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_list[0].columns)*(n+lag)) for n in range(len(ic_list))]
+    ic_pos_cov_hat_list = [ic_pos_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_pos_list[0].columns)*(n+lag)) for n in range(len(ic_pos_list))]
+    ic_neg_cov_hat_list = [ic_neg_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_neg_list[0].columns)*(n+lag)) for n in range(len(ic_neg_list))]
+    
     ic_corr_est = ic_list[0].ewm(halflife=halflife_cov).corr().shift(len(ic_list[0].columns)*(0+lag))
     ic_corr_est.to_csv('../Results/IC_CORR.csv')
+    
     weight_list = [DataFrame(index=ic_mean_hat_list[n].index, columns=ic_mean_hat_list[n].columns) for n in range(len(ic_mean_hat_list))]
+    weight_pos_list = [DataFrame(index=ic_mean_hat_list[n].index, columns=ic_mean_hat_list[n].columns) for n in range(len(ic_mean_hat_list))]
+    weight_neg_list = [DataFrame(index=ic_mean_hat_list[n].index, columns=ic_mean_hat_list[n].columns) for n in range(len(ic_mean_hat_list))]
     for date in r.index:
         for n in range(len(weight_list)):
             weight_list[n].loc[date, :] = np.linalg.inv(np.diag(ic_std_hat_list[n].loc[date, :])**2 + ic_cov_hat_list[n].loc[date, :, :].values + 0.001*np.eye(len(ic_cov_hat_list[n].loc[date, :, :]))).dot(ic_mean_hat_list[n].loc[date, :].values)
+            weight_pos_list[n].loc[date, :] = np.linalg.inv(np.diag(ic_pos_std_hat_list[n].loc[date, :])**2 + ic_pos_cov_hat_list[n].loc[date, :, :].values + 0.001*np.eye(len(ic_pos_cov_hat_list[n].loc[date, :, :]))).dot(ic_pos_mean_hat_list[n].loc[date, :].values)
+            weight_neg_list[n].loc[date, :] = np.linalg.inv(np.diag(ic_neg_std_hat_list[n].loc[date, :])**2 + ic_neg_cov_hat_list[n].loc[date, :, :].values + 0.001*np.eye(len(ic_neg_cov_hat_list[n].loc[date, :, :]))).dot(ic_neg_mean_hat_list[n].loc[date, :].values)
             #weight_list[n].loc[date, :] = ic_mean_hat_list[n].loc[date, :].values / ic_std_hat_list[n].loc[date, :].values
     ic_cov_hat_list[0].to_csv('../Results/ic_cov.csv')
     
@@ -83,15 +103,34 @@ def main():
     weight = weight.loc[weight.index<=end_date, :]
     weight.to_csv('../Results/weight.csv')
     
+    weight_pos = f(weight_pos_list, turn_rate)
+    weight_pos = weight_pos.loc[weight_pos.index>=begin_date, :]
+    weight_pos = weight_pos.loc[weight_pos.index<=end_date, :]
+    weight_pos.to_csv('../Results/weight_pos.csv')
+    
+    weight_neg = f(weight_neg_list, turn_rate)
+    weight_neg = weight_neg.loc[weight_neg.index>=begin_date, :]
+    weight_neg = weight_neg.loc[weight_neg.index<=end_date, :]
+    weight_neg.to_csv('../Results/weight_neg.csv')
+    
     r_hat = DataFrame(0, index=trade_cal, columns=r.columns)
     for factor in factors:
         factor_df = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
         factor_df = factor_df.loc[factor_df.index>=begin_date, :]
         factor_df = factor_df.loc[factor_df.index<=end_date, :]
         factor_df.fillna(method='ffill', inplace=True)
+        
+        factor_pos_df = factor_df.copy()
+        factor_pos_df[factor_pos_df<=0] = np.nan
+        factor_neg_df = factor_df.copy()
+        factor_neg_df[factor_neg_df>=0] = np.nan
+        
+        # r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
+        r_hat = r_hat.add(factor_pos_df.mul(weight_pos.loc[:, factor], axis=0), fill_value=0)
+        r_hat = r_hat.add(factor_neg_df.mul(weight_neg.loc[:, factor], axis=0), fill_value=0)
         r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
-    
-    stock_num = 30
+       
+    stock_num = 40
     trade_num = int(stock_num * turn_rate)
     
     num_group = 10
@@ -172,7 +211,7 @@ def main():
         group_pos[n] = DataFrame((n/num_group <= factor_quantile) & (factor_quantile <= (n+1)/num_group))
         group_pos[n][~group_pos[n]] = np.nan
         group_pos[n] = 1 * group_pos[n]
-        group_backtest[n] = ((group_pos[n] * r).mean(1) - r.mean(1)).cumsum().rename('%s'%(n/num_group))
+        group_backtest[n] = ((group_pos[n] * r).mean(1) - 1*r.mean(1)).cumsum().rename('%s'%(n/num_group))
         group_backtest[n].plot()
     plt.legend(['%s'%i for i in range(num_group)])
     plt.savefig('../Results/groupbacktest.png')

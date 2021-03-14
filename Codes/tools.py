@@ -69,10 +69,11 @@ def get_industrys(level='L1', stocks=None):
 def get_stocks(cond=None):
     if cond == None:
         def cond(stock):
-            return stock[0] == '3'
+            return True
     pro = ts.pro_api()
     stocks = pro.stock_basic(fields='ts_code, list_date')
     stocks = stocks.loc[stocks.list_date < datetime.datetime.today().strftime('%Y%m%d'), 'ts_code']
+    stocks = list(filter(lambda x:x!='689009.SH', stocks))
     return list(filter(cond, stocks))
 
 
@@ -172,6 +173,12 @@ def standardize_industry(data, industrys):
     data_dic = {k:standardize(data.loc[:, industrys[k]]) for k in industrys.keys()}
     ret = pd.concat([df for df in data_dic.values()], axis=1)
     
+    cols = list(ret.columns)
+    bk_list = ['00', '30', '60', '68']
+    bks = {bk: list(filter(lambda x:x[:2]==bk, cols)) for bk in bk_list}
+    
+    data_dic = {k:standardize(ret.loc[:, bks[k]]) for k in bks.keys()}
+    ret = pd.concat([df for df in data_dic.values()], axis=1)
     return ret
 
 def truncate_outliers(df, percent=0.05):

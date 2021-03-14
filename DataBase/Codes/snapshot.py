@@ -20,7 +20,8 @@ import tools
 date = datetime.datetime.today().strftime('%Y%m%d')
 trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
 if len(trade_cal) == 0:
-    sys.exit()
+    #sys.exit()
+    pass
     
 if len(sys.argv) == 3:
     start_date = sys.argv[1]
@@ -54,7 +55,7 @@ def init(context):
     dates = df_dates.cal_date[df_dates.is_open==1]
     #获取股票
     stocks = pro.stock_basic(fields='symbol, list_date, market')
-    stocks = stocks.loc[stocks.market=='创业板', :]
+    #stocks = stocks.loc[stocks.market=='创业板', :]
     #取数写入
     #pool = mp.Pool(2)
 
@@ -65,7 +66,12 @@ def init(context):
             os.mkdir('D:/stock/DataBase/StockSnapshootData/%s'%date)
         for i in stocks.index:
             if stocks.loc[i, 'list_date'] < date:
-                stock = 'SZSE.' + stocks.loc[i, 'symbol']
+                if stocks.loc[i, 'symbol'][0] == '6':
+                    stock = 'SHSE.' + stocks.loc[i, 'symbol']
+                else:
+                    stock = 'SZSE.' + stocks.loc[i, 'symbol']
+                if os.path.exists("D:/stock/DataBase/StockSnapshootData/%s/%s.csv"%(date, stock)):
+                    continue
                 history_data = history(symbol=stock, fields='quotes, created_at, price, last_volume, last_amount, trade_type', frequency='tick', start_time=datetime.datetime.strptime(date, '%Y%m%d'),  end_time=(datetime.datetime.strptime(date, '%Y%m%d')+datetime.timedelta(1)), df=True)
                 
                 if len(history_data) == 0:
@@ -118,5 +124,5 @@ if __name__ == '__main__':
         filename='snapshot.py',
         mode=MODE_BACKTEST,
         token='005bc7161f87579bc050fb3b0e74f9c94e136974',
-        backtest_start_time='2017-06-17 13:00:00',
-        backtest_end_time='2017-08-21 15:00:00')
+        backtest_start_time='2017-06-01 13:00:00',
+        backtest_end_time='2017-06-21 15:00:00')

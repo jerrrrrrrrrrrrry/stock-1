@@ -48,7 +48,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = RZYE('RZYE', stocks=stocks, start_date='20200101', end_date='20201230')
+    a = RZYE('RZYE', stocks=stocks, start_date='20200101', end_date='20210310')
     
     a.generate_factor()
     

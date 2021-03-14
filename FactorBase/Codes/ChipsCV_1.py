@@ -25,13 +25,16 @@ import tools
 #%%
 class ChipsCV(SingleFactor):
     def generate_factor(self):
-        CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
-        amount = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'amount'] for stock in self.stocks})
-        volume = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'vol'] for stock in self.stocks})
-
+        data = {stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]) for stock in self.stocks}
+        
+        CLOSE = DataFrame({stock:data[stock].loc[:, 'close'] for stock in self.stocks})
+        ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
+        amount = DataFrame({stock:data[stock].loc[:, 'amount'] for stock in self.stocks})
+        volume = DataFrame({stock:data[stock].loc[:, 'vol'] for stock in self.stocks})
+        
+        
         average_price = amount / volume * 10
         
-        ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = np.log(CLOSE * ADJ)
         average_price = np.log(average_price * ADJ)
         

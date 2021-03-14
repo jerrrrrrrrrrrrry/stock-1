@@ -25,9 +25,12 @@ import tools
 #%%
 class Jump(SingleFactor):
     def generate_factor(self):
-        OPEN = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'open'] for stock in self.stocks})
-        CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
-        ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
+        data = {stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]) for stock in self.stocks}
+        
+        OPEN = DataFrame({stock:data[stock].loc[:, 'open'] for stock in self.stocks})
+        CLOSE = DataFrame({stock:data[stock].loc[:, 'close'] for stock in self.stocks})
+        ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
+        
         OPEN = OPEN * ADJ
         CLOSE = CLOSE * ADJ
         a = np.log(OPEN / CLOSE.shift())
