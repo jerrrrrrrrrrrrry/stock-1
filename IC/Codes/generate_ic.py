@@ -20,11 +20,11 @@ from pandas import Series, DataFrame
 def main():
     # halflife = 20
     # turn_rate = 0.2
-    n = 20
+    n = 10
     #get y
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     y = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    
+
     stocks = list(y.columns)
     industrys = tools.get_industrys('L1', stocks)
     tmp = {}
@@ -33,13 +33,24 @@ def main():
             tmp[k] = industrys[k]
     industrys = tmp
     
+    industrys = {k:industrys[k] for k in industrys.keys()}
+    stocks = []
+    for v in industrys.values():
+        stocks.extend(v)
+    stocks.sort()
+    
+    y = y.loc[:, stocks]
     y_neutral_ind = tools.standardize_industry(y, industrys)
     
     market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in stocks})
     market_capitalization = np.log(market_capitalization)
     market_capitalization = market_capitalization.loc[y.index.dropna(), :]
     market_capitalization = tools.standardize(market_capitalization)
+    
+    # market_capitalization = pd.read_csv('%s/Data/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0]).loc[:, stocks]
+    # market_capitalization = market_capitalization.loc[y.index.dropna(), :]
     beta = (y_neutral_ind * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
+    
     y_neutral_mc = y_neutral_ind - market_capitalization.mul(beta, axis=0)
     
     
@@ -47,7 +58,7 @@ def main():
     #get factor
     files = os.listdir('%s/Data/'%gc.FACTORBASE_PATH)
     files = list(filter(lambda x:x[0] > '9', files))
-    factors = {file[:-4]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]) for file in files}
+    factors = {file[:-4]:pd.read_csv('%s/Data/%s'%(gc.FACTORBASE_PATH, file), index_col=[0], parse_dates=[0]).loc[:, stocks] for file in files}
     
     
     no_industry_neutral_list = ['MomentumInd']

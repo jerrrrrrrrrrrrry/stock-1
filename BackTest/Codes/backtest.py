@@ -24,7 +24,7 @@ import statsmodels.tsa.api as tsa
 def main():
     begin_date = '20180101'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210312'
+    end_date = '20210315'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
@@ -130,7 +130,7 @@ def main():
         r_hat = r_hat.add(factor_neg_df.mul(weight_neg.loc[:, factor], axis=0), fill_value=0)
         r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
        
-    stock_num = 40
+    stock_num = 30
     trade_num = int(stock_num * turn_rate)
     
     num_group = 10

@@ -56,7 +56,7 @@ def main(start_date, end_date):
             start_date_tmp = start_date
             if p[:2] == 'HF':
                 continue
-                start_date = '20200901'
+                start_date = '20201214'
             else:
                 start_date = '20170101'
             flag = 1
@@ -72,7 +72,7 @@ def main(start_date, end_date):
             start_date_tmp = start_date
             if p[:2] == 'HF':
                 continue
-                start_date = '20200901'
+                start_date = '20201214'
             else:
                 start_date = '20170101'
             flag = 1
