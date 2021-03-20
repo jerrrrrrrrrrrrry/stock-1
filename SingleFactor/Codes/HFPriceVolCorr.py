@@ -31,9 +31,10 @@ class HFPriceVolCorr(SingleFactor):
                 if len(data_dic[key]) == 0:
                     del data_dic[key]
             
-            amount = DataFrame({'%s.SZ'%stock:data_dic[stock].loc[:, 'last_amount'] for stock in data_dic.keys()})
+            stocks = [stock + '.SH' if stock[0]=='6' else stock + '.SZ' for stock in keys]
+            amount = DataFrame({stock:data_dic[stock[:6]].loc[:, 'last_amount'] for stock in stocks})
             amount.fillna(0, inplace=True)
-            vol = DataFrame({'%s.SZ'%stock:data_dic[stock].loc[:, 'last_volume'] for stock in data_dic.keys()})
+            vol = DataFrame({stock:data_dic[stock[:6]].loc[:, 'last_volume'] for stock in stocks})
             vol.fillna(0, inplace=True)
             
             amount = amount.loc[amount.index>'%s100000'%(date.replace('-', '')), :]
@@ -45,12 +46,9 @@ class HFPriceVolCorr(SingleFactor):
             corr_daily = price.corrwith(vol, axis=0)
             
             corr = pd.concat([corr, DataFrame({date:corr_daily}).T], axis=0)
-            print(date)
-        n = 5
-        a = corr.rolling(n).mean()
+            
+        a = corr
         self.factor = a
-
-
 
 #%%
 if __name__ == '__main__':

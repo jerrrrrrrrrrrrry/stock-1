@@ -25,14 +25,17 @@ import tools
 #%%
 class Jump(SingleFactor):
     def generate_factor(self):
-        OPEN = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'open'] for stock in self.stocks})
-        CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in self.stocks})
-        ADJ = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'adj_factor'] for stock in self.stocks})
+        data = {stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]) for stock in self.stocks}
+        
+        CLOSE = DataFrame({stock:data[stock].loc[:, 'close'] for stock in self.stocks})
+        OPEN = DataFrame({stock:data[stock].loc[:, 'open'] for stock in self.stocks})
+        ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
+        
         OPEN = OPEN * ADJ
         OPEN.fillna(method='ffill', inplace=True)
         CLOSE = CLOSE * ADJ
         CLOSE.fillna(method='ffill', inplace=True)
-        a = np.log(OPEN / CLOSE.shift()).rolling(20).mean()
+        a = np.log(OPEN / CLOSE.shift()).rolling(5).mean()
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
         self.factor = a
@@ -42,7 +45,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = Jump('Jump', stocks=stocks, start_date='20200101', end_date='20210221')
+    a = Jump('Jump', stocks=stocks, start_date='20180101', end_date='20210221')
     
     a.generate_factor()
     

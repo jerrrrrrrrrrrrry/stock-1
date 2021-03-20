@@ -26,11 +26,6 @@ def main(start_date, end_date):
     start_date = start_date.strftime('%Y%m%d')
     end_date = end_date.strftime('%Y%m%d')
     print(start_date)
-    industrys = {k:industrys[k] for k in industrys.keys()}
-    stocks = []
-    for v in industrys.values():
-        stocks.extend(v)
-    stocks.sort()
     
     CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in stocks})
     dates = CLOSE.index
@@ -51,11 +46,13 @@ def main(start_date, end_date):
     factors_2 = list(filter(lambda x:x[-5:]=='_2.py', files))
     #生成单因子
     for p in factors_1:
+        if p[:2] != 'HF':
+            continue
         flag = 0
         if not os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, p.split('.')[0][:-2])):
             start_date_tmp = start_date
             if p[:2] == 'HF':
-                continue
+                # continue
                 start_date = '20201214'
             else:
                 start_date = '20170101'
@@ -71,7 +68,7 @@ def main(start_date, end_date):
         if not os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, p.split('.')[0][:-2])):
             start_date_tmp = start_date
             if p[:2] == 'HF':
-                continue
+                # continue
                 start_date = '20201214'
             else:
                 start_date = '20170101'

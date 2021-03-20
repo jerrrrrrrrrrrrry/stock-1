@@ -33,7 +33,7 @@ if __name__ == '__main__':
     pro = ts.pro_api()
     #获取股票
     stocks = pro.stock_basic(fields='symbol, list_date, market')
-    stocks = stocks.loc[stocks.market=='创业板', :]
+    #stocks = stocks.loc[stocks.market=='创业板', :]
     codes = stocks.loc[:, 'symbol']
     data = {}
     ept = []

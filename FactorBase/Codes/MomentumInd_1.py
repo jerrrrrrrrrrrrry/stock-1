@@ -40,50 +40,11 @@ class MomentumInd(SingleFactor):
             ind_df = ind_df.loc[r.index, r.columns]
             ind_df[ind_df==0] = np.nan
             a = a.add(ind_df.mul((r * ind_df).mean(1), axis=0), fill_value=0)
+        
         a = a.loc[a.index >= self.start_date, :]
         a = a.loc[a.index <= self.end_date, :]
-        self.factor = a
+        self.factor = tools.standardize(a)
         
-    def update_factor(self):
-        self.generate_factor()
-        #if 'industry' in self.neutral_list:
-        if False:
-            industrys = tools.get_industrys('L1', self.stocks)
-            tmp = {}
-            for k in industrys.keys():
-                if len(industrys[k]) > 0:
-                    tmp[k] = industrys[k]
-            industrys = tmp
-            factor = tools.standardize_industry(self.factor, industrys)
-        #if 'market_capitalization' in self.neutral_list:
-        if False:
-            market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
-            market_capitalization = np.log(market_capitalization)
-            if self.start_date:
-                market_capitalization = market_capitalization.loc[market_capitalization.index >= self.start_date, :]
-            if self.end_date:
-                market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
-            #if 'industry' in self.neutral_list:
-            if True:
-                market_capitalization = tools.standardize_industry(market_capitalization, industrys)
-            beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
-            factor = factor - market_capitalization.mul(beta, axis=0)
-        self.factor.fillna(0, inplace=True)
-        factor = tools.standardize(self.factor)
-        if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
-            # if isinstance(factor.index[0], str):
-            #     factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])
-            #     factor_old.index = [str(i) for i in factor_old.index]
-            # else:
-            #     factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
-            factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
-            
-            factor = pd.concat([factor_old.loc[factor_old.index<factor.index[0], :], factor], axis=0)
-            #factor.sort_index(axis=0, inplace=True)
-        factor.sort_index(axis=1, inplace=True)
-        factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
-
-
 if __name__ == '__main__':
     
     #获取股票

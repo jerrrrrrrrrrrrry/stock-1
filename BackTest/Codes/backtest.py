@@ -24,16 +24,16 @@ import statsmodels.tsa.api as tsa
 def main():
     begin_date = '20180101'
     end_date = datetime.datetime.today().strftime('%Y%m%d')
-    end_date = '20210315'
+    end_date = '20210319'
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
-    #factors.extend(['MC', 'MCNL'])
+    # factors.extend(['MC', 'MCNL'])
     factors.extend(['MC'])
     factors.extend(['TurnRate'])
-    factors.extend(['ROE', 'EP', 'DEP'])
+    factors.extend(['ROE', 'EP', 'DEP', 'BP'])
     factors.extend(['MomentumInd'])
-    factors.extend(['ChipsCV', 'MomentumWeighted', 'CloseToAverage'])
+    factors.extend(['Jump', 'MomentumWeighted', 'CloseToAverage'])
     factors.extend(['CORRMarket'])
     factors.extend(['Sigma', 'ZF'])
     #factors.extend(['RQPM'])
@@ -44,6 +44,15 @@ def main():
     #r_rinei = pd.read_csv('%s/Data/r_rinei.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     #r_geye = pd.read_csv('%s/Data/r_geye.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
+    no_industry_neutral_list = ['MomentumInd', 'MomentumBK']
+    no_mc_neutral_list = ['MC']
+    
+    
+    mc = pd.read_csv('%s/Data/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0], parse_dates=[0]).loc[:, stocks]
+    mc = mc.loc[y.index.dropna(), stocks]
+    mc = tools.standardize_industry(mc, industrys)
+    beta = (y_neutral_ind * mc).sum(1) / (mc * mc).sum(1)
+    
     r = r.loc[r.index>=begin_date, :]
     r = r.loc[r.index<=end_date, :]
     
@@ -58,18 +67,24 @@ def main():
     ic_list = []
     ic_pos_list = []
     ic_neg_list = []
+    ic_big_list = []
+    ic_middle_list = []
+    ic_small_list = []
     for i in range(n):
         ic_list.append(pd.read_csv('%s/Results/IC_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
         ic_pos_list.append(pd.read_csv('%s/Results/IC_POS_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
         ic_neg_list.append(pd.read_csv('%s/Results/IC_NEG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        ic_big_list.append(pd.read_csv('%s/Results/IC_BIG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        ic_middle_list.append(pd.read_csv('%s/Results/IC_MIDDLE_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        ic_small_list.append(pd.read_csv('%s/Results/IC_SMALL_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
     
     ic_mean_hat_list = [ic_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_list))]
     ic_pos_mean_hat_list = [ic_pos_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_pos_list))]
     ic_neg_mean_hat_list = [ic_neg_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_neg_list))]
     
-    ic_std_hat_list = [ic_list[n].ewm(halflife=halflife_cov).std().shift(n+lag) for n in range(len(ic_list))]
-    ic_pos_std_hat_list = [ic_pos_list[n].ewm(halflife=halflife_cov).std().shift(n+lag) for n in range(len(ic_pos_list))]
-    ic_neg_std_hat_list = [ic_neg_list[n].ewm(halflife=halflife_cov).std().shift(n+lag) for n in range(len(ic_neg_list))]
+    ic_std_hat_list = [ic_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_list))]
+    ic_pos_std_hat_list = [ic_pos_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_pos_list))]
+    ic_neg_std_hat_list = [ic_neg_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_neg_list))]
 
     ic_cov_hat_list = [ic_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_list[0].columns)*(n+lag)) for n in range(len(ic_list))]
     ic_pos_cov_hat_list = [ic_pos_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_pos_list[0].columns)*(n+lag)) for n in range(len(ic_pos_list))]
@@ -130,7 +145,7 @@ def main():
         r_hat = r_hat.add(factor_neg_df.mul(weight_neg.loc[:, factor], axis=0), fill_value=0)
         r_hat = r_hat.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
        
-    stock_num = 30
+    stock_num = 10
     trade_num = int(stock_num * turn_rate)
     
     num_group = 10

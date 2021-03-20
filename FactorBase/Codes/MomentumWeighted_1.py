@@ -33,8 +33,8 @@ class MomentumWeighted(SingleFactor):
         r = CLOSE.diff()
         r.fillna(method='ffill', inplace=True)
         r.fillna(0, inplace=True)
-        w = np.arange(250) / 25
-        w = w - w[60]
+        w = np.arange(250) / 250
+        w = w - w[120]
         w = 1 / (1 + np.exp(-w)) - 0.5
         def f(r, w):
             ret = (r.values.flatten() * w[-len(r):]).sum()

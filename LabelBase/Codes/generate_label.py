@@ -23,7 +23,7 @@ def main(stocks=None):
     AMOUNT = DataFrame({stock: data[stock].loc[:, 'amount'] for stock in stocks})
     
     st = st.shift()
-    no_liquid = (AMOUNT.lt(AMOUNT.ewm(halflife=20).mean().quantile(0.05, axis=1), axis=0)).shift()
+    no_liquid = (AMOUNT.lt(AMOUNT.ewm(halflife=20).mean().quantile(0.1, axis=1), axis=0)).shift()
     
     tingpai = (CLOSE == np.nan) | (AMOUNT == 0)
     

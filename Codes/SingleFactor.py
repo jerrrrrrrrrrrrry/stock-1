@@ -45,21 +45,11 @@ class SingleFactor:
         
         if not os.path.exists('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name)):
             os.mkdir('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name))
-        if isinstance(self.factor.index[0], type(y.index[0])):
-            self.factor = self.factor.loc[y.index, :]
-        else:
-            ind = [i.strftime('%Y%m%d') for i in y.index]
-            ind = list(filter(lambda x:x in self.factor.index, ind))
-            self.factor = self.factor.loc[ind, :]
+        self.factor = self.factor.loc[y.index, :]
         factor = self.factor.copy()
         #行业中性
         if industry_neutral:
             industrys = tools.get_industrys('L1', self.stocks)
-            tmp = {}
-            for k in industrys.keys():
-                if len(industrys[k]) > 0:
-                    tmp[k] = industrys[k]
-            industrys = tmp
             factor = tools.standardize_industry(self.factor, industrys)
             self.factor_industry_neutral = factor.copy()
         
@@ -71,14 +61,11 @@ class SingleFactor:
                 market_capitalization = market_capitalization.loc[market_capitalization.index >= self.start_date, :]
             if self.end_date:
                 market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
-            market_capitalization = tools.standardize(market_capitalization)
+            market_capitalization = tools.standardize_industry(market_capitalization, industrys)
             beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
             factor = factor - market_capitalization.mul(beta, axis=0)
             self.factor_industry_size_neutral = factor.copy()
         
-        # self.factor_industry_neutral.fillna(0, inplace=True)
-        # self.factor_industry_size_neutral.fillna(0, inplace=True)
-        # factor.fillna(0, inplace=True)
         #因子分布
         plt.figure(figsize=(16,12))
         plt.hist(factor.fillna(0).values.flatten())
@@ -95,11 +82,9 @@ class SingleFactor:
             if industry_neutral:
                 y_neutral = tools.standardize_industry(ys[i], industrys)
             else:
-                y_neutral = ys[i].copy()
+                y_neutral = tools.standardize(ys[i])
             if size_neutral:
                 y_neutral = y_neutral - market_capitalization.mul((y_neutral * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1), axis=0)
-            if not (industry_neutral or size_neutral):
-                y_neutral = ys[i].copy()
             IC[i] = (y_neutral * factor).mean(1) / factor.std(1) / y_neutral.std(1)
             IR[i] = IC[i].rolling(20).mean() / IC[i].rolling(20).std()
             factor_quantile = DataFrame(rankdata(factor, axis=1), index=factor.index, columns=factor.columns).div(factor.notna().sum(1), axis=0)# / len(factor.columns)
@@ -138,18 +123,14 @@ class SingleFactor:
             
     def update_factor(self):
         self.generate_factor()
-        self.factor = self.inf_to_nan(self.factor)
+        factor = self.inf_to_nan(self.factor)
         #if 'industry' in self.neutral_list:
-        if True:
+        if False:
             industrys = tools.get_industrys('L1', self.stocks)
-            tmp = {}
-            for k in industrys.keys():
-                if len(industrys[k]) > 0:
-                    tmp[k] = industrys[k]
-            industrys = tmp
-            factor = tools.standardize_industry(self.factor, industrys)
+            factor = self.factor.loc[:, self.stocks]
+            factor = tools.standardize_industry(factor, industrys)
         #if 'market_capitalization' in self.neutral_list:
-        if True:
+        if False:
             market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
             market_capitalization = np.log(market_capitalization)
             if self.start_date:
@@ -157,9 +138,9 @@ class SingleFactor:
             if self.end_date:
                 market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
             #if 'industry' in self.neutral_list:
-            # if True:
-            #     market_capitalization = tools.standardize_industry(market_capitalization, industrys)
-            market_capitalization = tools.standardize(market_capitalization)
+            if True:
+                market_capitalization = tools.standardize_industry(market_capitalization, industrys)
+            # market_capitalization = tools.standardize(market_capitalization)
             beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
             factor = factor - market_capitalization.mul(beta, axis=0)
         # factor.fillna(0, inplace=True)
@@ -172,6 +153,4 @@ class SingleFactor:
             factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
             
             factor = pd.concat([factor_old.loc[factor_old.index<factor.index[0], :], factor], axis=0)
-            #factor.sort_index(axis=0, inplace=True)
-        factor.sort_index(axis=1, inplace=True)
         factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))

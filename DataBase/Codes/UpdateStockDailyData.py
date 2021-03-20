@@ -13,44 +13,54 @@ sys.path.append(Config.GLOBALCONFIG_PATH)
 import Global_Config as gc
 import tools
 
-date = datetime.datetime.today().strftime('%Y%m%d')
-trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
-if len(trade_cal) == 0:
-    sys.exit()
-    
-if len(sys.argv) == 2:
-    today = sys.argv[1]
+if len(sys.argv) == 3:
+    start = sys.argv[1]
+    end = sys.argv[2]
+elif len(sys.argv) == 2:
+    start = sys.argv[1]
+    end = sys.argv[1]
+    today = start
+    print(today)
 else:
     today = datetime.datetime.today().strftime('%Y%m%d')
-
-start = today
-end = today
+    start = today
+    end = today
+trade_cal = tools.get_trade_cal(start_date=start, end_date=end)
+if len(trade_cal) == 0:
+    sys.exit()
 
 pro = ts.pro_api()
 
-#获取行业分类
-stocks = pro.stock_basic(fields='ts_code').ts_code
-name = pro.stock_basic(fields='name, ts_code').set_index('ts_code')
-daily = pro.daily(start_date=start, end_date=end, fields='ts_code, open, high, low, close, vol, amount').set_index('ts_code')
-adj_factor = pro.adj_factor(trade_date=end, fields='ts_code, adj_factor').set_index('ts_code')
-#daily_basic = pro.daily_basic(trade_date=today, fields='ts_code, turnover_rate_f, pe_ttm, pb, ps_ttm, dv_ttm, total_mv, circ_mv').set_index('ts_code')
-
-df_daily = DataFrame()
-
-for stock in stocks:
-    if (stock in list(daily.index)) and (stock in list(adj_factor.index)):
-        df = pd.concat([daily.loc[[stock], :], adj_factor.loc[[stock], :], ], axis=1, sort=False)
-        df.loc[:,'st'] = ('ST' in name.loc[stock, 'name'])
-        df.index=[today]
-        df = pd.concat([DataFrame(stock, index=[datetime.datetime.strptime(today, '%Y%m%d')], columns=['ts_code']), df], axis=1, sort=False)
-        if os.path.exists('../StockDailyData/Stock/%s.csv'%stock):
-            df.to_csv('../StockDailyData/Stock/%s.csv'%stock, mode='a', header=False)
-            df_daily = pd.concat([df_daily, df.iloc[-1:, :]], axis=0, sort=False)
-        else:
-            if len(df) > 0:
-                df.to_csv('../StockDailyData/Stock/%s.csv'%stock)
+for date in trade_cal:
+    start = date
+    end = date
+    today = date
+    #获取行业分类
+    stocks = pro.stock_basic(fields='ts_code').ts_code
+    name = pro.stock_basic(fields='name, ts_code').set_index('ts_code')
+    daily = pro.daily(start_date=start, end_date=end, fields='ts_code, open, high, low, close, vol, amount').set_index('ts_code')
+    
+    adj_factor = pro.adj_factor(trade_date=end, fields='ts_code, adj_factor').set_index('ts_code')
+    #daily_basic = pro.daily_basic(trade_date=today, fields='ts_code, turnover_rate_f, pe_ttm, pb, ps_ttm, dv_ttm, total_mv, circ_mv').set_index('ts_code')
+    
+    df_daily = DataFrame()
+    
+    for stock in stocks:
+        if (stock in list(daily.index)) and (stock in list(adj_factor.index)):
+            df = pd.concat([daily.loc[[stock], :], adj_factor.loc[[stock], :], ], axis=1, sort=False)
+            
+            df.loc[:,'st'] = ('ST' in name.loc[stock, 'name'])
+            df.index=[today]
+            df = pd.concat([DataFrame(stock, index=[today], columns=['ts_code']), df], axis=1, sort=False)
+            
+            if os.path.exists('../StockDailyData/Stock/%s.csv'%stock):
+                df.to_csv('../StockDailyData/Stock/%s.csv'%stock, mode='a', header=False)
                 df_daily = pd.concat([df_daily, df.iloc[-1:, :]], axis=0, sort=False)
-    else:
-        if os.path.exists('../StockDailyData/Stock/%s.csv'%stock):
-            DataFrame(index=[today]).to_csv('../StockDailyData/Stock/%s.csv'%stock, mode='a', header=False)
-df_daily.set_index('ts_code').to_csv('../StockDailyData/Daily/%s.csv'%df.index[-1].strftime('%Y%m%d'))
+            else:
+                if len(df) > 0:
+                    df.to_csv('../StockDailyData/Stock/%s.csv'%stock)
+                    df_daily = pd.concat([df_daily, df.iloc[-1:, :]], axis=0, sort=False)
+        else:
+            if os.path.exists('../StockDailyData/Stock/%s.csv'%stock):
+                DataFrame(index=[today]).to_csv('../StockDailyData/Stock/%s.csv'%stock, mode='a', header=False)
+    df_daily.set_index('ts_code').to_csv('../StockDailyData/Daily/%s.csv'%df.index[-1])
