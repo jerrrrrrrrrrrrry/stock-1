@@ -162,7 +162,10 @@ def centralize(data):
 
 def standardize(data):
     if len(data.columns) > 1:
-        return data.subtract(data.mean(1), 0).divide(data.std(1), 0)
+        if (data.std(1) == 0).any():
+            return data.subtract(data.mean(1), 0)
+        else:
+            return data.subtract(data.mean(1), 0).divide(data.std(1), 0)
     else:
         return data.subtract(data.mean(1), 0)
 

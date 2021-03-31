@@ -21,13 +21,13 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 import statsmodels.tsa.api as tsa
 
-def main():
+if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210319'
+    end_date = '20210331'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
-    first = True
-    second = True
-    third = True
+    first = 1
+    second = 1
+    third = 0
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     factors = []
@@ -35,6 +35,7 @@ def main():
     factors.extend(['TurnRate'])
     factors.extend(['ROE', 'EP', 'DEP', 'BP'])
     #factors.extend(['MomentumInd', 'MomentumBK'])
+    #factors.extend(['Momentum', 'Alpha', 'Bias', 'Donchian', 'TSRegBeta'])
     factors.extend(['Jump', 'MomentumWeighted', 'CloseToAverage'])
     factors.extend(['CORRMarket'])
     factors.extend(['Sigma', 'ZF'])
@@ -42,7 +43,7 @@ def main():
     factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean'])
     #factors.extend(['HFStdMean', 'HFReversalMean', 'HFVolPowerMean', 'HFUID', 'HFSkewMean'])
     #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    r = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     #r_rinei = pd.read_csv('%s/Data/r_rinei.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     #r_geye = pd.read_csv('%s/Data/r_geye.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
@@ -61,11 +62,17 @@ def main():
     factors = list(set(factors))
     print(factors)
     
-    halflife_mean = 20
-    halflife_cov = 60
+    halflife_mean_first = 120
+    halflife_mean_second = 60
+    halflife_mean_third = 20
+    halflife_std_first = 120
+    halflife_std_second = 60
+    halflife_std_third = 20
+    halflife_cov = 250
     lag = 1
     turn_rate = 0.1
-    n = 10
+    n = 5
+    m = n
     if first:
         ic_list = []
     if second:
@@ -77,50 +84,55 @@ def main():
         ic_small_list = []
     print('-开始读ic-')
     for i in range(n):
-        print(i)
+        #print(i)
         if first:
             ic_list.append(pd.read_csv('%s/Results/IC_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
         if second:
             ic_pos_list.append(pd.read_csv('%s/Results/IC_POS_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
             ic_neg_list.append(pd.read_csv('%s/Results/IC_NEG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-        if third:
-            ic_big_list.append(pd.read_csv('%s/Results/IC_BIG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-            ic_middle_list.append(pd.read_csv('%s/Results/IC_MIDDLE_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-            ic_small_list.append(pd.read_csv('%s/Results/IC_SMALL_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        # if third:
+        #     ic_big_list.append(pd.read_csv('%s/Results/IC_BIG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        #     ic_middle_list.append(pd.read_csv('%s/Results/IC_MIDDLE_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
+        #     ic_small_list.append(pd.read_csv('%s/Results/IC_SMALL_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
     
     print('-计算ic_mean_hat-')
     if first:
-        ic_mean_hat_list = [ic_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_list))]
+        ic_mean_hat_list = [ic_list[n].ewm(halflife=halflife_mean_first).mean().shift(n+lag) for n in range(len(ic_list))]
     if second:
-        ic_pos_mean_hat_list = [ic_pos_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_pos_list))]
-        ic_neg_mean_hat_list = [ic_neg_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_neg_list))]
-    if third:
-        ic_big_mean_hat_list = [ic_big_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_big_list))]
-        ic_middle_mean_hat_list = [ic_middle_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_middle_list))]
-        ic_small_mean_hat_list = [ic_small_list[n].ewm(halflife=halflife_mean).mean().shift(n+lag) for n in range(len(ic_small_list))]
+        ic_pos_mean_hat_list = [ic_pos_list[n].ewm(halflife=halflife_mean_second).mean().shift(n+lag) for n in range(len(ic_pos_list))]
+        ic_neg_mean_hat_list = [ic_neg_list[n].ewm(halflife=halflife_mean_second).mean().shift(n+lag) for n in range(len(ic_neg_list))]
+    # if third:
+    #     ic_big_mean_hat_list = [ic_big_list[n].ewm(halflife=halflife_mean_third).mean().shift(n+lag) for n in range(len(ic_big_list))]
+    #     ic_middle_mean_hat_list = [ic_middle_list[n].ewm(halflife=halflife_mean_third).mean().shift(n+lag) for n in range(len(ic_middle_list))]
+    #     ic_small_mean_hat_list = [ic_small_list[n].ewm(halflife=halflife_mean_third).mean().shift(n+lag) for n in range(len(ic_small_list))]
     
     print('-计算ic_std_hat-')
     if first:
-        ic_std_hat_list = [ic_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_list))]
+        ic_std_hat_list = [ic_list[n].ewm(halflife=halflife_std_first).std().shift(n+lag) for n in range(len(ic_list))]
+    
     if second:
-        ic_pos_std_hat_list = [ic_pos_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_pos_list))]
-        ic_neg_std_hat_list = [ic_neg_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_neg_list))]
-    if third:
-        ic_big_std_hat_list = [ic_big_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_big_list))]
-        ic_middle_std_hat_list = [ic_middle_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_middle_list))]
-        ic_small_std_hat_list = [ic_small_list[n].ewm(halflife=halflife_mean).std().shift(n+lag) for n in range(len(ic_small_list))]
+        ic_pos_std_hat_list = [ic_pos_list[n].ewm(halflife=halflife_std_second).std().shift(n+lag) for n in range(len(ic_pos_list))]
+        ic_neg_std_hat_list = [ic_neg_list[n].ewm(halflife=halflife_std_second).std().shift(n+lag) for n in range(len(ic_neg_list))]
+    
+    # if third:
+    #     ic_big_std_hat_list = [ic_big_list[n].ewm(halflife=halflife_std_third).std().shift(n+lag) for n in range(len(ic_big_list))]
+    #     ic_middle_std_hat_list = [ic_middle_list[n].ewm(halflife=halflife_std_third).std().shift(n+lag) for n in range(len(ic_middle_list))]
+    #     ic_small_std_hat_list = [ic_small_list[n].ewm(halflife=halflife_std_third).std().shift(n+lag) for n in range(len(ic_small_list))]
 
     print('-计算ic_cov_hat-')
     if first:
-        ic_cov_hat_list = [ic_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_list[0].columns)*(n+lag)) for n in range(len(ic_list))]
-    if second:
-        ic_pos_cov_hat_list = [ic_pos_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_pos_list[0].columns)*(n+lag)) for n in range(len(ic_pos_list))]
-        ic_neg_cov_hat_list = [ic_neg_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_neg_list[0].columns)*(n+lag)) for n in range(len(ic_neg_list))]
-    if third:
-        ic_big_cov_hat_list = [ic_big_list[n].ewm(halflife=halflife_mean).cov().shift(n+lag) for n in range(len(ic_big_list))]
-        ic_middle_cov_hat_list = [ic_middle_list[n].ewm(halflife=halflife_mean).cov().shift(n+lag) for n in range(len(ic_middle_list))]
-        ic_small_cov_hat_list = [ic_small_list[n].ewm(halflife=halflife_mean).cov().shift(n+lag) for n in range(len(ic_small_list))]
-
+        ic_cov_hat_list = [ic_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_list[0].columns)*(n+lag)).fillna(0) for n in range(len(ic_list))]
+    
+    # if second:
+        # ic_pos_cov_hat_list = [ic_pos_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_pos_list[0].columns)*(n+lag)) for n in range(len(ic_pos_list))]
+        # ic_neg_cov_hat_list = [ic_neg_list[n].ewm(halflife=halflife_cov).cov().shift(len(ic_neg_list[0].columns)*(n+lag)) for n in range(len(ic_neg_list))]
+        
+    # if third:
+        # ic_big_cov_hat_list = [ic_big_list[n].ewm(halflife=halflife_cov).cov().shift(n+lag) for n in range(len(ic_big_list))]
+        # ic_middle_cov_hat_list = [ic_middle_list[n].ewm(halflife=halflife_cov).cov().shift(n+lag) for n in range(len(ic_middle_list))]
+        # ic_small_cov_hat_list = [ic_small_list[n].ewm(halflife=halflife_cov).cov().shift(n+lag) for n in range(len(ic_small_list))]
+        
+    
     # ic_corr_est = ic_list[0].ewm(halflife=halflife_cov).corr().shift(len(ic_list[0].columns)*(0+lag))
     # ic_corr_est.to_csv('../Results/IC_CORR.csv')
     
@@ -129,45 +141,64 @@ def main():
     if second:
         weight_pos_list = [DataFrame(index=ic_pos_mean_hat_list[n].index, columns=ic_pos_mean_hat_list[n].columns) for n in range(len(ic_pos_mean_hat_list))]
         weight_neg_list = [DataFrame(index=ic_neg_mean_hat_list[n].index, columns=ic_neg_mean_hat_list[n].columns) for n in range(len(ic_neg_mean_hat_list))]
-    if third:
-        weight_big_list = [DataFrame(index=ic_big_mean_hat_list[n].index, columns=ic_big_mean_hat_list[n].columns) for n in range(len(ic_big_mean_hat_list))]
-        weight_middle_list = [DataFrame(index=ic_middle_mean_hat_list[n].index, columns=ic_middle_mean_hat_list[n].columns) for n in range(len(ic_middle_mean_hat_list))]
-        weight_small_list = [DataFrame(index=ic_small_mean_hat_list[n].index, columns=ic_small_mean_hat_list[n].columns) for n in range(len(ic_small_mean_hat_list))]
+    # if third:
+    #     weight_big_list = [DataFrame(index=ic_big_mean_hat_list[n].index, columns=ic_big_mean_hat_list[n].columns) for n in range(len(ic_big_mean_hat_list))]
+    #     weight_middle_list = [DataFrame(index=ic_middle_mean_hat_list[n].index, columns=ic_middle_mean_hat_list[n].columns) for n in range(len(ic_middle_mean_hat_list))]
+    #     weight_small_list = [DataFrame(index=ic_small_mean_hat_list[n].index, columns=ic_small_mean_hat_list[n].columns) for n in range(len(ic_small_mean_hat_list))]
     
     print('-计算权重-')
     
     w_var_first = 0
-    w_cov_first = 1
+    w_cov_first = 1 - w_var_first
     w_lambda_first = 0.0001
     w_var_second = 1
-    w_cov_second = 1
-    w_lambda_second = 0.0001
+    w_cov_second = 1 - w_var_second
+    w_lambda_second = 0.001
     w_var_third = 1
-    w_cov_third = 0
-    w_lambda_third = 0.0001
+    w_cov_third = 1 - w_var_third
+    print(w_var_first, w_var_second, w_var_third)
+    w_lambda_third = 0.001
     
-    for n in range(len(ic_list)):
-        print(n)
+    for n in range(m):
+        #print(n)
         for date in r.index:
             if first:
                 weight_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_first*ic_std_hat_list[n].loc[date, :])**2 + w_cov_first*ic_cov_hat_list[n].loc[date, :, :].values + w_lambda_first*np.eye(len(ic_cov_hat_list[n].loc[date, :, :]))).dot(ic_mean_hat_list[n].loc[date, :].values)
             if second:
-                weight_pos_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_second*ic_pos_std_hat_list[n].loc[date, :])**2 + w_cov_second*ic_pos_cov_hat_list[n].loc[date, :, :].values + w_lambda_second*np.eye(len(ic_pos_cov_hat_list[n].loc[date, :, :]))).dot(ic_pos_mean_hat_list[n].loc[date, :].values)
-                weight_neg_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_second*ic_neg_std_hat_list[n].loc[date, :])**2 + w_cov_second*ic_neg_cov_hat_list[n].loc[date, :, :].values + w_lambda_second*np.eye(len(ic_neg_cov_hat_list[n].loc[date, :, :]))).dot(ic_neg_mean_hat_list[n].loc[date, :].values)
-            if third:
-                weight_big_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_big_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_big_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_big_cov_hat_list[n].loc[date, :, :]))).dot(ic_big_mean_hat_list[n].loc[date, :].values)
-                weight_middle_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_middle_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_middle_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_middle_cov_hat_list[n].loc[date, :, :]))).dot(ic_middle_mean_hat_list[n].loc[date, :].values)
-                weight_small_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_small_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_small_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_small_cov_hat_list[n].loc[date, :, :]))).dot(ic_small_mean_hat_list[n].loc[date, :].values)
+                # weight_pos_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_second*ic_pos_std_hat_list[n].loc[date, :])**2 + w_cov_second*ic_pos_cov_hat_list[n].loc[date, :, :].values + w_lambda_second*np.eye(len(ic_pos_cov_hat_list[n].loc[date, :, :]))).dot(ic_pos_mean_hat_list[n].loc[date, :].values)
+                # weight_neg_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_second*ic_neg_std_hat_list[n].loc[date, :])**2 + w_cov_second*ic_neg_cov_hat_list[n].loc[date, :, :].values + w_lambda_second*np.eye(len(ic_neg_cov_hat_list[n].loc[date, :, :]))).dot(ic_neg_mean_hat_list[n].loc[date, :].values)
+            
+                weight_pos_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_second*ic_pos_std_hat_list[n].loc[date, :])**2  + w_lambda_second*np.eye(len(factors))).dot(ic_pos_mean_hat_list[n].loc[date, :].values)
+                weight_neg_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_second*ic_neg_std_hat_list[n].loc[date, :])**2  + w_lambda_second*np.eye(len(factors))).dot(ic_neg_mean_hat_list[n].loc[date, :].values)
+            # if third:
+                # weight_big_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_big_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_big_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_big_cov_hat_list[n].loc[date, :, :]))).dot(ic_big_mean_hat_list[n].loc[date, :].values)
+                # weight_middle_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_middle_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_middle_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_middle_cov_hat_list[n].loc[date, :, :]))).dot(ic_middle_mean_hat_list[n].loc[date, :].values)
+                # weight_small_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_small_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_small_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_small_cov_hat_list[n].loc[date, :, :]))).dot(ic_small_mean_hat_list[n].loc[date, :].values)
+                
+                # weight_big_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_big_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_cov_hat_list[n].loc[date, :, :]))).dot(ic_big_mean_hat_list[n].loc[date, :].values)
+                # weight_middle_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_middle_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_cov_hat_list[n].loc[date, :, :]))).dot(ic_middle_mean_hat_list[n].loc[date, :].values)
+                # weight_small_list[n].loc[date, :] = np.linalg.inv(np.diag(w_var_third*ic_small_std_hat_list[n].loc[date, :])**2 + w_cov_third*ic_cov_hat_list[n].loc[date, :, :].values + w_lambda_third*np.eye(len(ic_cov_hat_list[n].loc[date, :, :]))).dot(ic_small_mean_hat_list[n].loc[date, :].values)
+       
+        # if first:
+        #     weight_list[n] = tools.standardize(weight_list[n])
+        # if second:
+        #     weight_pos_list[n] = tools.standardize(weight_pos_list[n])
+        #     weight_neg_list[n] = tools.standardize(weight_neg_list[n])
+        # if third:
+        #     weight_big_list[n] = tools.standardize(weight_big_list[n])
+        #     weight_middle_list[n] = tools.standardize(weight_middle_list[n])
+        #     weight_small_list[n] = tools.standardize(weight_small_list[n])
+            
             
     # ic_cov_hat_list[0].to_csv('../Results/ic_cov.csv')
     
     print('权重求和')
     def f(df_list, turn_rate=0.2):
-        s = 1 - (1 - turn_rate) ** len(df_list)
+        # s = 1 - (1 - turn_rate) ** len(df_list)
         mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
         for i in range(len(df_list)):
             mean = mean + df_list[i] * ((1 - turn_rate)**i + (1 - i * turn_rate)) / 2
-        mean = mean / s
+        # mean = mean / s
         ret = mean
         return ret
     if first:
@@ -187,37 +218,37 @@ def main():
         weight_neg = weight_neg.loc[weight_neg.index<=end_date, :]
         weight_neg.to_csv('../Results/weight_neg.csv')
     
-    if third:
-        weight_big = f(weight_big_list, turn_rate)
-        weight_big = weight_big.loc[weight_big.index>=begin_date, :]
-        weight_big = weight_big.loc[weight_big.index<=end_date, :]
-        weight_big.to_csv('../Results/weight_big.csv')
+    # if third:
+    #     weight_big = f(weight_big_list, turn_rate)
+    #     weight_big = weight_big.loc[weight_big.index>=begin_date, :]
+    #     weight_big = weight_big.loc[weight_big.index<=end_date, :]
+    #     weight_big.to_csv('../Results/weight_big.csv')
         
-        weight_middle = f(weight_middle_list, turn_rate)
-        weight_middle = weight_middle.loc[weight_middle.index>=begin_date, :]
-        weight_middle = weight_middle.loc[weight_middle.index<=end_date, :]
-        weight_middle.to_csv('../Results/weight_middle.csv')
+    #     weight_middle = f(weight_middle_list, turn_rate)
+    #     weight_middle = weight_middle.loc[weight_middle.index>=begin_date, :]
+    #     weight_middle = weight_middle.loc[weight_middle.index<=end_date, :]
+    #     weight_middle.to_csv('../Results/weight_middle.csv')
         
-        weight_small = f(weight_small_list, turn_rate)
-        weight_small = weight_small.loc[weight_small.index>=begin_date, :]
-        weight_small = weight_small.loc[weight_small.index<=end_date, :]
-        weight_small.to_csv('../Results/weight_small.csv')
+    #     weight_small = f(weight_small_list, turn_rate)
+    #     weight_small = weight_small.loc[weight_small.index>=begin_date, :]
+    #     weight_small = weight_small.loc[weight_small.index<=end_date, :]
+    #     weight_small.to_csv('../Results/weight_small.csv')
     
     r_hat = DataFrame(0, index=trade_cal, columns=r.columns)
-    r_hat_first = DataFrame(0, index=trade_cal, columns=r.columns)
-    r_hat_second = DataFrame(0, index=trade_cal, columns=r.columns)
-    r_hat_third = DataFrame(0, index=trade_cal, columns=r.columns)
     
     no_industry_neutral_list = ['MomentumInd', 'MomentumBK']
     no_mc_neutral_list = ['MC']
     
     print('-计算r_hat-')
     for factor in factors:
-        print('factor: %s 预处理'%factor)
+        d = DataFrame(0, index=trade_cal, columns=r.columns)
+        #print('factor: %s 预处理'%factor)
         factor_df = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
         factor_df = factor_df.loc[factor_df.index>=begin_date, :]
         factor_df = factor_df.loc[factor_df.index<=end_date, :]
         factor_df.fillna(method='ffill', inplace=True)
+        
+        
         
         stocks = list(set(factor_df.columns).intersection(set(mc.columns)))
         industrys = tools.get_industrys('L1', stocks)
@@ -233,52 +264,47 @@ def main():
             factor_df = factor_df - mc_df.mul(beta, axis=0)
         print('factor: %s 贡献r_hat'%factor)
         
+        big_mask = factor_df.ge(factor_df.quantile(0.975, 1), 0)
+        small_mask = factor_df.le(factor_df.quantile(0.025, 1), 0)
+        factor_df[big_mask|small_mask] = 0
+        
         if first:
-            r_hat_first = r_hat_first.add(factor_df.mul(weight.loc[:, factor], axis=0), fill_value=0)
+            d_first = factor_df.mul(weight.loc[:, factor], axis=0)
+            d = d.add(d_first, fill_value=0)
             
         if second:
-            pos_mask = factor_df.ge(factor_df.quantile(0.5, 1), 0)
-            neg_mask = factor_df.le(factor_df.quantile(0.5, 1), 0)
-        
-            factor_pos_df = factor_df.copy()
-            factor_pos_df[neg_mask] = np.nan
-            factor_neg_df = factor_df.copy()
-            factor_neg_df[pos_mask] = np.nan
+            knot_1 = 0
             
-            r_hat_second = r_hat_second.add(factor_pos_df.mul(weight_pos.loc[:, factor], axis=0), fill_value=0)
-            r_hat_second = r_hat_second.add(factor_neg_df.mul(weight_neg.loc[:, factor], axis=0), fill_value=0)
+            indicative_2 = factor_df.ge(knot_1, 0)
             
-        if third:
-            big_mask = factor_df.ge(factor_df.quantile(2/3, 1), 0)
-            middle_mask = factor_df.ge(factor_df.quantile(1/3, 1), 0) & factor_df.le(factor_df.quantile(2/3, 1), 0)
-            small_mask = factor_df.le(factor_df.quantile(1/3, 1), 0)
-        
-            factor_big_df = factor_df.copy()
-            factor_big_df[middle_mask|small_mask] = np.nan
-            factor_middle_df = factor_df.copy()
-            factor_middle_df[big_mask|small_mask] = np.nan
-            factor_small_df = factor_df.copy()
-            factor_small_df[big_mask|middle_mask] = np.nan
+            d_second_1 = factor_df.mul(weight_neg.loc[:, factor], axis=0)
+            d_second_2 = indicative_2 * factor_df.sub(knot_1, axis=0).mul(weight_pos.sub(weight_neg).loc[:, factor], axis=0)
+            d = d.add(d_second_1, fill_value=0)
+            d = d.add(d_second_2, fill_value=0)
             
-            r_hat_third = r_hat_third.add(factor_big_df.mul(weight_big.loc[:, factor], axis=0), fill_value=0)
-            r_hat_third = r_hat_third.add(factor_middle_df.mul(weight_middle.loc[:, factor], axis=0), fill_value=0)
-            r_hat_third = r_hat_third.add(factor_small_df.mul(weight_small.loc[:, factor], axis=0), fill_value=0)
-    
-    if first:
-        r_hat_first = tools.standardize(r_hat_first)
-        r_hat = r_hat + r_hat_first
-    if second:
-        r_hat_second = tools.standardize(r_hat_second)
-        r_hat = r_hat + r_hat_second
-    if third:
-        r_hat_third = tools.standardize(r_hat_third)
-        r_hat = r_hat + r_hat_third
+        # if third:
+        #     knot_1 = factor_df.quantile(1/3, 1)
+        #     knot_2 = factor_df.quantile(2/3, 1)
+            
+        #     indicative_2 = factor_df.ge(knot_1, 0)
+        #     indicative_3 = factor_df.ge(knot_2, 0)
+            
+        #     d_third_1 = factor_df.mul(weight_small.loc[:, factor], axis=0)
+        #     d_third_2 = indicative_2 * factor_df.sub(knot_1, axis=0).mul(weight_middle.sub(weight_small).loc[:, factor], axis=0)
+        #     d_third_3 = indicative_3 * factor_df.sub(knot_2, axis=0).mul(weight_big.sub(weight_middle).loc[:, factor], axis=0)
+            
+        #     d = d.add(d_third_1, fill_value=0)
+        #     d = d.add(d_third_2, fill_value=0)
+        #     d = d.add(d_third_3, fill_value=0)
+            
+        # d = tools.standardize(d)
+        r_hat = r_hat + d
     
     print('回测')
-    stock_num = 50
+    stock_num = 100
     trade_num = int(stock_num * turn_rate)
     
-    num_group = 10
+    num_group = 80
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
@@ -343,7 +369,7 @@ def main():
     r_hat = r_hat.loc[r.index, r.columns]
     
     plt.figure(figsize=(16,12))
-    IC = r_hat.fillna(0).corrwith(r.fillna(0), method='spearman', axis=1)
+    IC = r_hat.fillna(0).corrwith(r.fillna(0), axis=1)
     IC.cumsum().plot()
     plt.savefig('../Results/IC.png')
     
@@ -376,7 +402,14 @@ def main():
     r.mean(1).cumsum().plot()
     (pnl - r.mean(1)).cumsum().plot()
     alpha = pnl - r.mean(1)
+    print('日均')
+    print(alpha.mean())
+    print('夏普')
     print(alpha.mean()/alpha.std() * np.sqrt(250))
+    print('胜率')
+    print((alpha>0).mean())
+    print('盈亏比')
+    print((alpha[alpha>0].mean()/alpha[alpha<0].mean()))
     plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
     plt.savefig('%s/Results/backtest_sum.png'%gc.BACKTEST_PATH)
     
@@ -391,5 +424,3 @@ def main():
     #按换手率生成持仓
     #生成日收益率
     #plot和统计分析
-if __name__ == '__main__':
-    main()

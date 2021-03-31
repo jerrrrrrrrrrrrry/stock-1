@@ -27,9 +27,9 @@ def f(dic_mp_ic, dic_mp_ic_pos, dic_mp_ic_neg, dic_mp_ic_big, dic_mp_ic_middle, 
     dic_pos_df = {}
     dic_neg_df = {}
     
-    dic_big = {}
-    dic_middle = {}
-    dic_small = {}
+    # dic_big = {}
+    # dic_middle = {}
+    # dic_small = {}
     
     for factor in factors.keys():
         x = factors[factor].copy()
@@ -44,27 +44,32 @@ def f(dic_mp_ic, dic_mp_ic_pos, dic_mp_ic_neg, dic_mp_ic_big, dic_mp_ic_middle, 
             x = tools.standardize_industry(x, industrys)
             x = x - mc.mul((x * mc).sum(1) / (mc * mc).sum(1), axis=0)
         
+        
+        big_mask = x.ge(x.quantile(0.975, 1), 0)
+        small_mask = x.le(x.quantile(0.025, 1), 0)
+        x[big_mask|small_mask] = np.nan
+        
         y_pos = y.copy()
         y_neg = y.copy()
         
-        y_big = y.copy()
-        y_middle = y.copy()
-        y_small = y.copy()
+        # y_big = y.copy()
+        # y_middle = y.copy()
+        # y_small = y.copy()
         
         
         x_pos = x.copy()
         x_neg = x.copy()
         
-        x_big = x.copy()
-        x_middle = x.copy()
-        x_small = x.copy()
+        # x_big = x.copy()
+        # x_middle = x.copy()
+        # x_small = x.copy()
         
-        pos_mask = x.ge(x.quantile(0.5, 1), 0)
-        neg_mask = x.le(x.quantile(0.5, 1), 0)
+        pos_mask = x.ge(0, 0)
+        neg_mask = x.le(0, 0)
         
-        big_mask = x.ge(x.quantile(2/3, 1), 0)
-        middle_mask = x.ge(x.quantile(1/3, 1), 0) & x.le(x.quantile(2/3, 1), 0)
-        small_mask = x.le(x.quantile(1/3, 1), 0)
+        # big_mask = x.ge(x.quantile(2/3, 1), 0)
+        # middle_mask = x.ge(x.quantile(1/3, 1), 0) & x.le(x.quantile(2/3, 1), 0)
+        # small_mask = x.le(x.quantile(1/3, 1), 0)
         
         y_pos[neg_mask] = np.nan
         y_neg[pos_mask] = np.nan
@@ -72,32 +77,32 @@ def f(dic_mp_ic, dic_mp_ic_pos, dic_mp_ic_neg, dic_mp_ic_big, dic_mp_ic_middle, 
         x_pos[neg_mask] = np.nan
         x_neg[pos_mask] = np.nan
         
-        y_big[middle_mask|small_mask] = np.nan
-        y_middle[big_mask|small_mask] = np.nan
-        y_small[big_mask|middle_mask] = np.nan
+        # y_big[middle_mask|small_mask] = np.nan
+        # y_middle[big_mask|small_mask] = np.nan
+        # y_small[big_mask|middle_mask] = np.nan
         
-        x_big[middle_mask|small_mask] = np.nan
-        x_middle[big_mask|small_mask] = np.nan
-        x_small[big_mask|middle_mask] = np.nan
+        # x_big[middle_mask|small_mask] = np.nan
+        # x_middle[big_mask|small_mask] = np.nan
+        # x_small[big_mask|middle_mask] = np.nan
         
-        dic_df[factor] = x.corrwith(y, axis=1)
-        dic_pos_df[factor] = x_pos.corrwith(y_pos, axis=1)
-        dic_neg_df[factor] = x_neg.corrwith(y_neg, axis=1)
-        dic_big[factor] = x_big.corrwith(y_big, axis=1)
-        dic_middle[factor] = x_middle.corrwith(y_middle, axis=1)
-        dic_small[factor] = x_small.corrwith(y_small, axis=1)
+        dic_df[factor] = x.corrwith(y, axis=1) * y.std(1) / x.std(1)
+        dic_pos_df[factor] = x_pos.corrwith(y_pos, axis=1) * y_pos.std(1) / x_pos.std(1)
+        dic_neg_df[factor] = x_neg.corrwith(y_neg, axis=1) * y_neg.std(1) / x_neg.std(1)
+        # dic_big[factor] = x_big.corrwith(y_big, axis=1) * y.std(1) / x.std(1)
+        # dic_middle[factor] = x_middle.corrwith(y_middle, axis=1) * y.std(1) / x.std(1)
+        # dic_small[factor] = x_small.corrwith(y_small, axis=1) * y.std(1) / x.std(1)
     
     dic_mp_ic[i] = DataFrame(dic_df)
     dic_mp_ic_pos[i] = DataFrame(dic_pos_df)
     dic_mp_ic_neg[i] = DataFrame(dic_neg_df)
-    dic_mp_ic_big[i] = DataFrame(dic_big)
-    dic_mp_ic_middle[i] = DataFrame(dic_middle)
-    dic_mp_ic_small[i] = DataFrame(dic_small)
+    # dic_mp_ic_big[i] = DataFrame(dic_big)
+    # dic_mp_ic_middle[i] = DataFrame(dic_middle)
+    # dic_mp_ic_small[i] = DataFrame(dic_small)
     
 if __name__ == '__main__':
     
-    n = 10
-    y = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    n = 5
+    y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
 
     stocks = tools.get_stocks()
     
@@ -130,7 +135,7 @@ if __name__ == '__main__':
     no_mc_neutral_list = ['MC']
     
     
-    pool = mp.Pool(10)
+    pool = mp.Pool(5)
     
     dic_mp_ic = mp.Manager().dict()
     dic_mp_ic_pos = mp.Manager().dict()
@@ -149,16 +154,16 @@ if __name__ == '__main__':
     ic_list = []
     ic_pos_list = []
     ic_neg_list = []
-    ic_big_list = []
-    ic_middle_list = []
-    ic_small_list = []
+    # ic_big_list = []
+    # ic_middle_list = []
+    # ic_small_list = []
     for i in range(1, n+1):
         ic_list.append(dic_mp_ic[i])
         ic_pos_list.append(dic_mp_ic_pos[i])
         ic_neg_list.append(dic_mp_ic_neg[i])
-        ic_big_list.append(dic_mp_ic_big[i])
-        ic_middle_list.append(dic_mp_ic_middle[i])
-        ic_small_list.append(dic_mp_ic_small[i])
+        # ic_big_list.append(dic_mp_ic_big[i])
+        # ic_middle_list.append(dic_mp_ic_middle[i])
+        # ic_small_list.append(dic_mp_ic_small[i])
     
     
     trade_cal = tools.get_trade_cal(start_date='20170701', end_date=datetime.datetime.today().strftime('%Y%m%d'))
@@ -168,37 +173,37 @@ if __name__ == '__main__':
     ic_list = [ic.loc[dates, :] for ic in ic_list]
     ic_pos_list = [ic.loc[dates, :] for ic in ic_pos_list]
     ic_neg_list = [ic.loc[dates, :] for ic in ic_neg_list]
-    ic_big_list = [ic.loc[dates, :] for ic in ic_big_list]
-    ic_middle_list = [ic.loc[dates, :] for ic in ic_middle_list]
-    ic_small_list = [ic.loc[dates, :] for ic in ic_small_list]
+    # ic_big_list = [ic.loc[dates, :] for ic in ic_big_list]
+    # ic_middle_list = [ic.loc[dates, :] for ic in ic_middle_list]
+    # ic_small_list = [ic.loc[dates, :] for ic in ic_small_list]
     
     ic_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
     ic_pos_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
     ic_neg_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
-    ic_big_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
-    ic_middle_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
-    ic_small_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
+    # ic_big_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
+    # ic_middle_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
+    # ic_small_sum = DataFrame(0, index=ic_list[0].index, columns=ic_list[0].columns)
     
     for n in range((len(ic_list))):
         ic_list[n].to_csv('../Results/IC_%s.csv'%n)
         ic_pos_list[n].to_csv('../Results/IC_POS_%s.csv'%n)
         ic_neg_list[n].to_csv('../Results/IC_NEG_%s.csv'%n)
-        ic_big_list[n].to_csv('../Results/IC_BIG_%s.csv'%n)
-        ic_middle_list[n].to_csv('../Results/IC_MIDDLE_%s.csv'%n)
-        ic_small_list[n].to_csv('../Results/IC_SMALL_%s.csv'%n)
+        # ic_big_list[n].to_csv('../Results/IC_BIG_%s.csv'%n)
+        # ic_middle_list[n].to_csv('../Results/IC_MIDDLE_%s.csv'%n)
+        # ic_small_list[n].to_csv('../Results/IC_SMALL_%s.csv'%n)
         
         ic_sum = ic_sum + ic_list[n]
         ic_pos_sum = ic_pos_sum + ic_pos_list[n]
         ic_neg_sum = ic_neg_sum + ic_neg_list[n]
-        ic_big_sum = ic_big_sum + ic_big_list[n]
-        ic_middle_sum = ic_middle_sum + ic_middle_list[n]
-        ic_small_sum = ic_small_sum + ic_small_list[n]
+        # ic_big_sum = ic_big_sum + ic_big_list[n]
+        # ic_middle_sum = ic_middle_sum + ic_middle_list[n]
+        # ic_small_sum = ic_small_sum + ic_small_list[n]
         
     
     ic_sum.to_csv('../Results/IC_sum.csv')
     ic_pos_sum.to_csv('../Results/IC_pos_sum.csv')
     ic_neg_sum.to_csv('../Results/IC_neg_sum.csv')
-    ic_big_sum.to_csv('../Results/IC_big_sum.csv')
-    ic_middle_sum.to_csv('../Results/IC_middle_sum.csv')
-    ic_small_sum.to_csv('../Results/IC_small_sum.csv')
+    # ic_big_sum.to_csv('../Results/IC_big_sum.csv')
+    # ic_middle_sum.to_csv('../Results/IC_middle_sum.csv')
+    # ic_small_sum.to_csv('../Results/IC_small_sum.csv')
         
