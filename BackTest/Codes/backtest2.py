@@ -23,190 +23,59 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210329'
+    end_date = '20210402'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
-    factors = []
-    factors.extend(['MC'])
-    factors.extend(['TurnRate'])
-    factors.extend(['ROE', 'EP', 'DEP', 'BP'])
-    #factors.extend(['MomentumInd'])
-    #factors.extend(['Momentum', 'Alpha', 'Bias', 'Donchian', 'TSRegBeta'])
-    factors.extend(['Jump', 'MomentumWeighted', 'CloseToAverage'])
-    factors.extend(['CORRMarket'])
-    factors.extend(['Sigma', 'ZF'])
-    #factors.extend(['RQPM'])
-    factors.extend(['HFStdMean', 'HFUID', 'HFReversalMean', 'HFSkewMean', 'HFVolMean'])
-    #factors.extend(['HFStdMean', 'HFReversalMean', 'HFVolPowerMean', 'HFUID', 'HFSkewMean'])
-    #y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    r = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    #r_rinei = pd.read_csv('%s/Data/r_rinei.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-    #r_geye = pd.read_csv('%s/Data/r_geye.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
-
     
-    
-    mc = pd.read_csv('%s/Data/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0], parse_dates=[0])
-    stocks = list(mc.columns)
-    industrys = tools.get_industrys('L1', stocks)
-    #mc = mc.loc[y.index.dropna(), stocks]
-    mc = tools.standardize_industry(mc, industrys)
-    mc = mc.loc[mc.index>=begin_date, :]
-    mc = mc.loc[mc.index<=end_date, :]
-    #beta = (y_neutral_ind * mc).sum(1) / (mc * mc).sum(1)
+    r = pd.read_csv('%s/Data/r_jiaoyi.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     
     r = r.loc[r.index>=begin_date, :]
     r = r.loc[r.index<=end_date, :]
     
-    factors = list(set(factors))
-    print(factors)
+    # r_hat_name_list = ['r_hat_ic_0', 'r_hat_iccov_0',
+    #               'r_hat_ic_2', 'r_hat_ic_4',
+    #               'r_hat_beta_0', 'r_hat_betacov_0',
+    #               'r_hat_beta_2', 'r_hat_beta_4']
+    r_hat_name_list = ['r_hat_beta_0',
+                  'r_hat_beta_2', 'r_hat_beta_4']
+    r_hat_dic = {r_hat_name : tools.standardize(pd.read_csv('%s/Results/%s.csv'%(gc.PREDICT_PATH, r_hat_name), index_col=[0], parse_dates=[0])) for r_hat_name in r_hat_name_list}
     
-    halflife_mean_nl = 60
+    ic = DataFrame(index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_name_list)
+    y = y.loc[r_hat_dic[r_hat_name_list[0]].index, r_hat_dic[r_hat_name_list[0]].columns]
+    
     halflife_mean = 60
     halflife_cov = 250
-    lag = 1
-    turn_rate = 0.1
+    lamb = 1e-2
     n = 5
-    # ic_mega_list = []
-    # ic_big_list = []
-    # ic_small_list = []
-    # ic_micro_list = []
-    ic_pos_list = []
-    ic_neg_list = []
-    print('-开始读ic-')
-    for i in range(n):
-        # ic_mega_list.append(pd.read_csv('%s/Results/IC_MEGA_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-        # ic_big_list.append(pd.read_csv('%s/Results/IC_BIG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-        # ic_small_list.append(pd.read_csv('%s/Results/IC_SMALL_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-        # ic_micro_list.append(pd.read_csv('%s/Results/IC_MICRO_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-        ic_pos_list.append(pd.read_csv('%s/Results/IC_POS_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-        ic_neg_list.append(pd.read_csv('%s/Results/IC_NEG_%s.csv'%(gc.IC_PATH, i), index_col=[0], parse_dates=[0]).loc[:, factors].fillna(0))
-        
-    print('-计算ic_mean_hat-')
-    # ic_mega_mean_hat_list = [ic_mega_list[i].ewm(halflife=halflife_mean_nl).mean().shift(i+lag) for i in range(n)]
-    # ic_big_mean_hat_list = [ic_big_list[i].ewm(halflife=halflife_mean_nl).mean().shift(i+lag) for i in range(n)]
-    # ic_small_mean_hat_list = [ic_small_list[i].ewm(halflife=halflife_mean_nl).mean().shift(i+lag) for i in range(n)]
-    # ic_micro_mean_hat_list = [ic_micro_list[i].ewm(halflife=halflife_mean_nl).mean().shift(i+lag) for i in range(n)]
-    ic_pos_mean_hat_list = [ic_pos_list[i].ewm(halflife=halflife_mean_nl).mean().shift(i+lag) for i in range(n)]
-    ic_neg_mean_hat_list = [ic_neg_list[i].ewm(halflife=halflife_mean_nl).mean().shift(i+lag) for i in range(n)]
-
-    print('权重求和')
-    def f(df_list, turn_rate=0.1):
-        mean = DataFrame(0, index=df_list[0].index, columns=df_list[0].columns)
-        for i in range(len(df_list)):
-            mean = mean + df_list[i] * ((1 - turn_rate)**i + (1 - i * turn_rate)) / 2
-        mean = mean
-        ret = mean
-        return ret
-    ic_pos_mean_hat = f(ic_pos_mean_hat_list, turn_rate)
-    ic_neg_mean_hat = f(ic_neg_mean_hat_list, turn_rate)
-    # ic_small_mean_hat = f(ic_small_mean_hat_list, turn_rate)
-    # ic_micro_mean_hat = f(ic_micro_mean_hat_list, turn_rate)
-    ic_pos_mean_hat = ic_pos_mean_hat.loc[ic_pos_mean_hat.index>=begin_date, :]
-    ic_pos_mean_hat = ic_pos_mean_hat.loc[ic_pos_mean_hat.index<=end_date, :]
-    ic_neg_mean_hat = ic_neg_mean_hat.loc[ic_neg_mean_hat.index>=begin_date, :]
-    ic_neg_mean_hat = ic_neg_mean_hat.loc[ic_neg_mean_hat.index<=end_date, :]
-    # ic_small_mean_hat = ic_small_mean_hat.loc[ic_small_mean_hat.index>=begin_date, :]
-    # ic_small_mean_hat = ic_small_mean_hat.loc[ic_small_mean_hat.index<=end_date, :]
-    # ic_micro_mean_hat = ic_micro_mean_hat.loc[ic_micro_mean_hat.index>=begin_date, :]
-    # ic_micro_mean_hat = ic_micro_mean_hat.loc[ic_micro_mean_hat.index<=end_date, :]
-    industry_list = ['MomentumInd']
-    no_mc_neutral_list = ['MC']
+    lag = n + 1
     
+    for r_hat_name in r_hat_name_list:
+        ic.loc[:, r_hat_name] = y.corrwith(r_hat_dic[r_hat_name], 1)
+    ic.to_csv('../Results/ic.csv')
     
-    print('-因子非线性转换-')
-    factor_nl_dic = {}
-    IC_dic = {}
-    for i in range(n):
-        IC_dic[i] = DataFrame(columns=factors)
-    for factor in factors:
-        print('factor: %s 预处理'%factor)
-        factor_df = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
-        factor_df = factor_df.loc[factor_df.index>=begin_date, :]
-        factor_df = factor_df.loc[factor_df.index<=end_date, :]
-        factor_df.fillna(method='ffill', inplace=True)
-        
-        stocks = list(set(factor_df.columns).intersection(set(mc.columns)))
-        industrys = tools.get_industrys('L1', stocks)
-        factor_df = factor_df.loc[:, stocks]
-        mc_df = mc.loc[:, stocks]
-        
-        if factor in industry_list:
-            factor_df = tools.standardize(factor_df)
-        elif factor in no_mc_neutral_list:
-            factor_df = tools.standardize_industry(factor_df, industrys)
-        else:
-            factor_df = tools.standardize_industry(factor_df, industrys)
-            beta = (factor_df * mc).sum(1) / (mc * mc).sum(1)
-            factor_df = factor_df - mc_df.mul(beta, axis=0)
-        
-        print('factor: %s 非线性转换'%factor)
-        # knot_1 = factor_df.quantile(0.25, 1)
-        knot = factor_df.quantile(0.5, 1)
-        # knot_3 = factor_df.quantile(0.75, 1)
-        
-        # mega_mask = factor_df.ge(knot_3, 0)
-        # big_mask = factor_df.ge(knot_2, 0)
-        # small_mask = factor_df.ge(knot_1, 0)
-        pos_mask = factor_df.ge(knot, 0)
-        factor_nl = DataFrame(0, index=factor_df.index, columns=factor_df.columns)
-        factor_nl = factor_nl.add(factor_df.mul(ic_neg_mean_hat.loc[:, factor], 0), fill_value=0)
-        
-        factor_nl = factor_nl.add(pos_mask * (factor_df.sub(knot, 0)).mul(ic_pos_mean_hat.loc[:, factor].sub(ic_neg_mean_hat.loc[:, factor], 0), 0), fill_value=0)
-        # factor_nl = factor_nl.add(big_mask * (factor_df.sub(knot_2, 0)).mul(ic_big_mean_hat.loc[:, factor].sub(ic_small_mean_hat.loc[:, factor], 0), 0), fill_value=0)
-        # factor_nl = factor_nl.add(mega_mask * (factor_df.sub(knot_3, 0)).mul(ic_mega_mean_hat.loc[:, factor].sub(ic_big_mean_hat.loc[:, factor], 0), 0), fill_value=0)
-        
-        factor_nl_dic[factor] = factor_nl.copy()
-        print('factor: %s IC'%factor)
-        for i in range(1, n+1):
-            IC_dic[i-1].loc[:, factor] = factor_nl.corrwith(r.rolling(i).sum().shift(1-i), 1).fillna(0)
-    ic_list = []
-    for i in range(n):
-        ic_list.append(IC_dic[i])
-    ic_mean_hat_list = [ic_list[i].ewm(halflife=halflife_mean).mean().shift(i+lag) for i in range(n)]
-    ic_cov_hat_list = [ic_list[i].ewm(halflife=halflife_cov).cov().shift(len(factors)*(i+lag)) for i in range(n)]
+    ic_mean_hat = ic.ewm(halflife=halflife_mean).mean().shift(lag)
+    ic_cov_hat = ic.ewm(halflife=halflife_mean).cov().shift(lag*len(r_hat_name_list))
+    weight = DataFrame(index=ic.index, columns=ic.columns)
+    for date in weight.index:
+        weight.loc[date, :] = np.linalg.inv(ic_cov_hat.loc[date, :, :].values + lamb*np.eye(len(r_hat_name_list))).dot(ic_mean_hat.loc[date, :].values)
     
-    v_list = [DataFrame(index=ic_mean_hat_list[i].index, columns=ic_mean_hat_list[i].columns) for i in range(n)]
-    
-    lamb = 0.0001
-    for i in range(n):
-        for date in r.index:
-            v_list[i].loc[date, :] = np.linalg.inv(0*ic_cov_hat_list[i].loc[date, :, :].values + lamb*np.eye(len(factors))).dot(ic_mean_hat_list[i].loc[date, :].values)
-            
-    v = f(v_list, turn_rate)
-    v.to_csv('../Results/v.csv')
-    weight = DataFrame(0, index=trade_cal, columns=r.columns)
-    for factor in factors:
-        print('factor: %s 贡献权重'%factor)
-        factor_df = factor_nl_dic[factor]
-        factor_df = factor_df.loc[factor_df.index>=begin_date, :]
-        factor_df = factor_df.loc[factor_df.index<=end_date, :]
-        factor_df.fillna(method='ffill', inplace=True)
-        
-        stocks = list(set(factor_df.columns).intersection(set(mc.columns)))
-        industrys = tools.get_industrys('L1', stocks)
-        factor_df = factor_df.loc[:, stocks]
-        mc_df = mc.loc[:, stocks]
-        
-        if factor in industry_list:
-            factor_df = tools.standardize(factor_df)
-        elif factor in no_mc_neutral_list:
-            factor_df = tools.standardize_industry(factor_df, industrys)
-        else:
-            factor_df = tools.standardize_industry(factor_df, industrys)
-            beta = (factor_df * mc).sum(1) / (mc * mc).sum(1)
-            factor_df = factor_df - mc_df.mul(beta, axis=0)
-        weight = weight.add(factor_df.mul(v.loc[:, factor], axis=0), fill_value=0)
+    ic_mean_hat.to_csv('../Results/ic_mean_hat.csv')
+    ic_cov_hat.to_csv('../Results/ic_cov_hat.csv')
     weight.to_csv('../Results/weight.csv')
-    # ic_corr_est = ic_list[0].ewm(halflife=halflife_cov).corr().shift(len(ic_list[0].columns)*(0+lag))
-    # ic_corr_est.to_csv('../Results/IC_CORR.csv')
-    r_hat = weight
+    
+    r_hat = DataFrame(0, index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_dic[r_hat_name_list[0]].columns)
+    for r_hat_name in r_hat_name_list:
+        r_hat = r_hat.add(r_hat_dic[r_hat_name].mul(weight.loc[:, r_hat_name], 0), fill_value=0)
+    
     print('回测')
+    turn_rate = 0.2
     stock_num = 100
     trade_num = int(stock_num * turn_rate)
     
-    num_group = 10
+    num_group = 800
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
@@ -304,7 +173,14 @@ if __name__ == '__main__':
     r.mean(1).cumsum().plot()
     (pnl - r.mean(1)).cumsum().plot()
     alpha = pnl - r.mean(1)
+    print('日均')
+    print(alpha.mean())
+    print('夏普')
     print(alpha.mean()/alpha.std() * np.sqrt(250))
+    print('胜率')
+    print((alpha>0).mean())
+    print('盈亏比')
+    print((alpha[alpha>0].mean()/alpha[alpha<0].mean()))
     plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
     plt.savefig('%s/Results/backtest_sum.png'%gc.BACKTEST_PATH)
     

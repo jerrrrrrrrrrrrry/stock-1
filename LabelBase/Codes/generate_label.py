@@ -35,11 +35,11 @@ if __name__ == '__main__':
     MC.loc[:,:] = mc
     
     st = st.shift()
-    no_liquid = (AMOUNT.lt(AMOUNT.ewm(halflife=20).mean().quantile(0.1, 1), 0)).shift()
+    no_liquid = (AMOUNT.lt(AMOUNT.ewm(halflife=60).mean().quantile(0.1, 1), 0)).shift()
     
     low_price = CLOSE.lt(3, 0).shift()
     
-    low_mc = (MC.lt(MC.ewm(halflife=20).mean().quantile(0.1, 1), 0)).shift()
+    low_mc = (MC.lt(MC.ewm(halflife=60).mean().quantile(0.1, 1), 0)).shift()
     
     
     tingpai = (CLOSE == np.nan) | (AMOUNT == 0)
@@ -52,17 +52,40 @@ if __name__ == '__main__':
     
     yiziban = (HIGH == LOW) & (HIGH > CLOSE.shift())
     
-    y = OPEN.shift(-2) - OPEN.shift(-1)
     r = CLOSE.shift(-1) - CLOSE
+    r_jiaoyi = OPEN.shift(-2) - OPEN.shift(-1)
     r_rinei = CLOSE.shift(-1) - OPEN.shift(-1)
     r_geye = OPEN.shift(-1) - CLOSE
+    
+    turn_rate = 0.2
+    n = 5
+    measure_1 = np.array([(1-turn_rate)**i for i in range(n)])
+    measure_2 = np.array([1-turn_rate*i for i in range(n)])
+    measure = measure_1 + measure_2
+    measure = measure / np.sum(measure)
+    
+    y = DataFrame(0, index=r_jiaoyi.index, columns=r_jiaoyi.columns)
+    for i in range(n):
+        y = y + measure[i] * r_jiaoyi.rolling(1+i).sum().shift(-i)
+    
     def list_n_na(s, n):
-        for i in range(n):
-            s.loc[s.first_valid_index()] = np.nan
+        if s.notna().any():
+            ind = np.where(s.notna())[0][0]
+            ind_end = min(ind + n, len(s))
+            s.iloc[ind:ind_end] = np.nan
+        
+        # for i in range(n):
+        #     s.loc[s.first_valid_index()] = np.nan
         return s
     n = 60
-    y = y.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
     r = r.apply(func=list_n_na, args=(n,), axis=0, result_type='expand')
+    r_jiaoyi[r.isna()] = np.nan
+    r_rinei[r.isna()] = np.nan
+    r_geye[r.isna()] = np.nan
+    y[r.isna()] = np.nan
+    
+    
+    
     
     na_mask = st|no_liquid|yiziban|tingpai|low_price|low_mc
     
@@ -76,4 +99,5 @@ if __name__ == '__main__':
     r.to_csv('../Data/r.csv')
     r_rinei.to_csv('../Data/r_rinei.csv')
     r_geye.to_csv('../Data/r_geye.csv')
+    r_jiaoyi.to_csv('../Data/r_jiaoyi.csv')
     

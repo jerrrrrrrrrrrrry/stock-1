@@ -44,6 +44,7 @@ def main(start_date, end_date):
     files = list(filter(lambda x:len(x)>4, files))
     factors_1 = list(filter(lambda x:x[-5:]=='_1.py', files))
     factors_2 = list(filter(lambda x:x[-5:]=='_2.py', files))
+    #factors_1 = ['MomentumWeighted_1.py']
     #生成单因子
     for p in factors_1:
         flag = 0

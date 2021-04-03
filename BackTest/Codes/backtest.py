@@ -23,7 +23,7 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210331'
+    end_date = '20210401'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     first = 1
     second = 1
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     halflife_std_second = 60
     halflife_std_third = 20
     halflife_cov = 250
-    lag = 1
+    lag = 5
     turn_rate = 0.1
     n = 5
     m = n

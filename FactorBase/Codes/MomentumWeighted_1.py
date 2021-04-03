@@ -39,7 +39,7 @@ class MomentumWeighted(SingleFactor):
         def f(r, w):
             ret = (r.values.flatten() * w[-len(r):]).sum()
             return ret
-        a = r.rolling(250, min_periods=1).apply(func=f, args=(w,))
+        a = r.rolling(250).apply(func=f, args=(w,))
         a = a
         # n0 = 0
         # n1 = 5
