@@ -89,12 +89,10 @@ if __name__ == '__main__':
     elif len(sys.argv) == 1:
         start_date = datetime.datetime.today().strftime('%Y%m%d')
         end_date = datetime.datetime.today().strftime('%Y%m%d')
-        date = datetime.datetime.today().strftime('%Y%m%d')
-        trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
+        trade_cal = tools.get_trade_cal(start_date=start_date, end_date=end_date)
         if len(trade_cal) == 0:
-            # sys.exit()
-            pass
+            sys.exit()
     else:
         print('date?')
-        exit()
+        sys.exit()
     main(start_date, end_date)

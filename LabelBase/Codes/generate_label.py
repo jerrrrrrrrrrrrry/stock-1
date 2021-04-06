@@ -30,17 +30,71 @@ if __name__ == '__main__':
     stocks_2 = os.listdir('../../DataBase/StockTradingDerivativeData/Stock/')
     stocks_2 = [stock[:-4] for stock in stocks_2]
     stocks_2 = list(set(stocks).intersection(set(stocks_2)))
+    
     mc = pd.read_csv('%s/Data/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0], parse_dates=[0])
+    # stocks = list(mc.columns)
+    # industrys = tools.get_industrys('L1', stocks)
+    # mc = tools.standardize_industry(mc, industrys)
+    mc = tools.standardize(mc)
     MC = DataFrame(index=OPEN.index, columns=OPEN.columns)
     MC.loc[:,:] = mc
     
+    ep = pd.read_csv('%s/Data/EP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    stocks = list(ep.columns)
+    industrys = tools.get_industrys('L1', stocks)
+    ep = tools.standardize_industry(ep, industrys)
+    EP = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    EP.loc[:,:] = ep
+    
+    eps = pd.read_csv('%s/Data/EPS.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    stocks = list(eps.columns)
+    industrys = tools.get_industrys('L1', stocks)
+    eps = tools.standardize_industry(eps, industrys)
+    EPS = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    EPS.loc[:,:] = eps
+    
+    bp = pd.read_csv('%s/Data/BP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    stocks = list(bp.columns)
+    industrys = tools.get_industrys('L1', stocks)
+    bp = tools.standardize_industry(bp, industrys)
+    BP = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    BP.loc[:,:] = bp
+    
+    dep = pd.read_csv('%s/Data/DEP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    stocks = list(dep.columns)
+    industrys = tools.get_industrys('L1', stocks)
+    dep = tools.standardize_industry(dep, industrys)
+    DEP = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    DEP.loc[:,:] = dep
+    
+    roe = pd.read_csv('%s/Data/ROE.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    stocks = list(roe.columns)
+    industrys = tools.get_industrys('L1', stocks)
+    roe = tools.standardize_industry(roe, industrys)
+    ROE = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    ROE.loc[:,:] = roe
+    
+    
     st = st.shift()
-    no_liquid = (AMOUNT.lt(AMOUNT.ewm(halflife=60).mean().quantile(0.1, 1), 0)).shift()
     
-    low_price = CLOSE.lt(3, 0).shift()
+    qt = 0.75
     
-    low_mc = (MC.lt(MC.ewm(halflife=60).mean().quantile(0.1, 1), 0)).shift()
+    f = EP + DEP + BP + ROE
     
+    low_f = (f.lt(f.ewm(halflife=20).mean().quantile(qt, 1), 0)).shift()
+    
+    low_liquid = (AMOUNT.lt(AMOUNT.ewm(halflife=20).mean().quantile(0.1, 1), 0)).shift()
+    low_price = CLOSE.le(1, 0).shift()
+    low_mc = (MC.lt(MC.ewm(halflife=20).mean().quantile(0.1, 1), 0)).shift()
+    
+    # low_ep = (EP.lt(EP.ewm(halflife=20).mean().quantile(qt, 1), 0)).shift()
+    # low_eps = (EPS.lt(EPS.ewm(halflife=20).mean().quantile(qt, 1), 0)).shift()
+    # low_dep = (DEP.lt(DEP.ewm(halflife=20).mean().quantile(qt, 1), 0)).shift()
+    # low_bp = (BP.lt(BP.ewm(halflife=20).mean().quantile(qt, 1), 0)).shift()
+    # low_roe = (ROE.lt(ROE.ewm(halflife=20).mean().quantile(qt, 1), 0)).shift()
+    
+    blacklist = low_liquid|low_price|low_mc|low_f
+    # blacklist = low_price|low_mc
     
     tingpai = (CLOSE == np.nan) | (AMOUNT == 0)
     
@@ -59,15 +113,12 @@ if __name__ == '__main__':
     
     turn_rate = 0.2
     n = 5
-    measure_1 = np.array([(1-turn_rate)**i for i in range(n)])
-    measure_2 = np.array([1-turn_rate*i for i in range(n)])
-    measure = measure_1 + measure_2
-    measure = measure / np.sum(measure)
+    measure = np.array([(1-turn_rate)**i for i in range(n)])
     
-    y = DataFrame(0, index=r_jiaoyi.index, columns=r_jiaoyi.columns)
-    for i in range(n):
-        y = y + measure[i] * r_jiaoyi.rolling(1+i).sum().shift(-i)
-    
+    # y = DataFrame(0, index=r_jiaoyi.index, columns=r_jiaoyi.columns)
+    # for i in range(n):
+    #     y = y + measure[i] * r_jiaoyi.rolling(1+i).sum().shift(-i)
+    y = OPEN.shift(-n-1) - OPEN.shift(-1)
     def list_n_na(s, n):
         if s.notna().any():
             ind = np.where(s.notna())[0][0]
@@ -87,12 +138,16 @@ if __name__ == '__main__':
     
     
     
-    na_mask = st|no_liquid|yiziban|tingpai|low_price|low_mc
+    na_mask = st|yiziban|tingpai|blacklist
     
     y[na_mask] = np.nan
+    r_jiaoyi[na_mask] = np.nan
     r[na_mask] = np.nan
     r_rinei[na_mask] = np.nan
     r_geye[na_mask] = np.nan
+    
+    print(r_jiaoyi.mean(1).sum())
+    r_jiaoyi.mean(1).cumsum().plot()
     
     na_mask.to_csv('../Data/na_mask.csv')
     y.to_csv('../Data/y.csv')

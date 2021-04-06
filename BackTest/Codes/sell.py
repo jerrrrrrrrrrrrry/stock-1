@@ -15,10 +15,10 @@ def main():
     position = [str(s) for s in position]
     position = ['300' + s if len(s)==3 else '3000' + s if len(s)==2 else s for s in position]
     
-    buy_list = ['002611', '002344', '600390', '600705', '600583',
-                '002519', '601958', '002666', '000426', '600491']
-    sell_list= ['002869', '002215', '603879', '603421', '603015',
-                '601992', '600881', '601989', '600751']
+    buy_list = ['000936', '601169', '002491', '601002', '300447',
+                '600369', '601789', '002170', '600312', '600170']
+    sell_list= ['603887', '600461', '000701', '002433', '300499',
+                '600051', '300427', '002275']
     
     position.extend(buy_list)
     position = list(set(position) - set(sell_list))
@@ -45,7 +45,7 @@ def main():
     na_mask = pd.read_csv('../../LabelBase/Data/na_mask.csv', index_col=[0], parse_dates=[0]).loc[date, :]
     
     r_hat_rank = r_hat.loc[date, :].rank().sort_values(ascending=False)
-    n = 10
+    n = 20
     for i in r_hat_rank.index:
         if n == 0:
             break

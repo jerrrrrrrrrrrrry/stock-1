@@ -59,15 +59,13 @@ if __name__ == '__main__':
     ic_neg_dic = {}
     beta_pos_dic = {}
     beta_neg_dic = {}
-    #分4段IC
-    ic_micro_dic = {}
-    ic_small_dic = {}
+    #分3段IC
     ic_big_dic = {}
-    ic_mega_dic = {}
-    beta_micro_dic = {}
-    beta_small_dic = {}
+    ic_middle_dic = {}
+    ic_small_dic = {}
     beta_big_dic = {}
-    beta_mega_dic = {}
+    beta_middle_dic = {}
+    beta_small_dic = {}
     
     for factor in factors.keys():
         x = factors[factor].copy()
@@ -83,8 +81,8 @@ if __name__ == '__main__':
             beta = (x * mc).sum(1) / (mc * mc).sum(1)
             x = x - mc.mul(beta, axis=0)
         
-        big_mask = x.ge(x.quantile(0.99, 1), 0)
-        small_mask = x.le(x.quantile(0.01, 1), 0)
+        big_mask = x.ge(x.quantile(0.975, 1), 0)
+        small_mask = x.le(x.quantile(0.025, 1), 0)
         x[big_mask|small_mask] = np.nan
         
         y_pos = y.copy()
@@ -93,23 +91,20 @@ if __name__ == '__main__':
         x_pos = x.copy()
         x_neg = x.copy()
         
-        y_mega = y.copy()
         y_big = y.copy()
+        y_middle = y.copy()
         y_small = y.copy()
-        y_micro = y.copy()
         
-        x_mega = x.copy()
         x_big = x.copy()
+        x_middle = x.copy()
         x_small = x.copy()
-        x_micro = x.copy()
         
         pos_mask = x.ge(x.quantile(0.5, 1), 0)
         neg_mask = x.le(x.quantile(0.5, 1), 0)
         
-        mega_mask = x.ge(x.quantile(0.75, 1), 0)
-        big_mask = x.ge(x.quantile(0.5, 1), 0) & x.le(x.quantile(0.75, 1), 0)
-        small_mask = x.ge(x.quantile(0.25, 1), 0) & x.le(x.quantile(0.5, 1), 0)
-        micro_mask = x.le(x.quantile(0.25, 1), 0)
+        big_mask = x.ge(x.quantile(2/3, 1), 0)
+        middle_mask = x.ge(x.quantile(1/3, 1), 0) & x.le(x.quantile(2/3, 1), 0)
+        small_mask = x.le(x.quantile(1/3, 1), 0)
         
         y_pos[~pos_mask] = np.nan
         y_neg[~neg_mask] = np.nan
@@ -117,15 +112,13 @@ if __name__ == '__main__':
         x_pos[~pos_mask] = np.nan
         x_neg[~neg_mask] = np.nan
         
-        y_mega[~mega_mask] = np.nan
         y_big[~big_mask] = np.nan
+        y_middle[~middle_mask] = np.nan
         y_small[~small_mask] = np.nan
-        y_micro[~micro_mask] = np.nan
         
-        x_mega[~mega_mask] = np.nan
         x_big[~big_mask] = np.nan
+        x_middle[~middle_mask] = np.nan
         x_small[~small_mask] = np.nan
-        x_micro[~micro_mask] = np.nan
         
         ic_dic[factor] = x.corrwith(y, axis=1)
         beta_dic[factor] = ic_dic[factor] * y.std(1) / x.std(1)
@@ -135,14 +128,13 @@ if __name__ == '__main__':
         beta_pos_dic[factor] = ic_pos_dic[factor] * y_pos.std(1) / x_pos.std(1)
         beta_neg_dic[factor] = ic_neg_dic[factor] * y_neg.std(1) / x_neg.std(1)
         
-        ic_mega_dic[factor] = x_mega.corrwith(y_mega, 1)
         ic_big_dic[factor] = x_big.corrwith(y_big, 1)
+        ic_middle_dic[factor] = x_middle.corrwith(y_middle, 1)
         ic_small_dic[factor] = x_small.corrwith(y_small, 1)
-        ic_micro_dic[factor] = x_micro.corrwith(y_micro, 1)
-        beta_mega_dic[factor] = ic_mega_dic[factor] * y_mega.std(1) / x_mega.std(1)
+        
         beta_big_dic[factor] = ic_big_dic[factor] * y_big.std(1) / x_big.std(1)
+        beta_middle_dic[factor] = ic_middle_dic[factor] * y_middle.std(1) / x_middle.std(1)
         beta_small_dic[factor] = ic_small_dic[factor] * y_small.std(1) / x_small.std(1)
-        beta_micro_dic[factor] = ic_micro_dic[factor] * y_micro.std(1) / x_micro.std(1)
         
     ic = DataFrame(ic_dic)
     beta = DataFrame(beta_dic)
@@ -152,14 +144,12 @@ if __name__ == '__main__':
     beta_pos = DataFrame(beta_pos_dic)
     beta_neg = DataFrame(beta_neg_dic)
     
-    ic_mega = DataFrame(ic_mega_dic)
     ic_big = DataFrame(ic_big_dic)
+    ic_middle = DataFrame(ic_middle_dic)
     ic_small = DataFrame(ic_small_dic)
-    ic_micro = DataFrame(ic_micro_dic)
-    beta_mega = DataFrame(beta_mega_dic)
     beta_big = DataFrame(beta_big_dic)
+    beta_middle = DataFrame(beta_middle_dic)
     beta_small = DataFrame(beta_small_dic)
-    beta_micro = DataFrame(beta_micro_dic)
     
     trade_cal = tools.get_trade_cal(start_date='20170701', end_date=datetime.datetime.today().strftime('%Y%m%d'))
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
@@ -174,14 +164,12 @@ if __name__ == '__main__':
     beta_pos = beta_pos.loc[dates, :]
     beta_neg = beta_neg.loc[dates, :]
     
-    ic_mega = ic_mega.loc[dates, :]
     ic_big = ic_big.loc[dates, :]
+    ic_middle = ic_middle.loc[dates, :]
     ic_small = ic_small.loc[dates, :]
-    ic_micro = ic_micro.loc[dates, :]
-    beta_mega = beta_mega.loc[dates, :]
     beta_big = beta_big.loc[dates, :]
+    beta_middle = beta_middle.loc[dates, :]
     beta_small = beta_small.loc[dates, :]
-    beta_micro = beta_micro.loc[dates, :]
     
     ic.to_csv('../Results/ic.csv')
     beta.to_csv('../Results/beta.csv')
@@ -191,11 +179,9 @@ if __name__ == '__main__':
     beta_pos.to_csv('../Results/beta_pos.csv')
     beta_neg.to_csv('../Results/beta_neg.csv')
     
-    ic_mega.to_csv('../Results/ic_mega.csv')
     ic_big.to_csv('../Results/ic_big.csv')
+    ic_middle.to_csv('../Results/ic_middle.csv')
     ic_small.to_csv('../Results/ic_small.csv')
-    ic_micro.to_csv('../Results/ic_micro.csv')
-    beta_mega.to_csv('../Results/beta_mega.csv')
     beta_big.to_csv('../Results/beta_big.csv')
+    beta_middle.to_csv('../Results/beta_middle.csv')
     beta_small.to_csv('../Results/beta_small.csv')
-    beta_micro.to_csv('../Results/beta_micro.csv')

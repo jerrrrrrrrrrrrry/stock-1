@@ -60,8 +60,8 @@ if __name__ == '__main__':
             factor_df = tools.standardize_industry(factor_df, industrys)
             beta = (factor_df * mc_df).sum(1) / (mc_df * mc_df).sum(1)
             factor_df = factor_df - mc_df.mul(beta, 0)
-        big_mask = factor_df.ge(factor_df.quantile(0.99, 1), 0)
-        small_mask = factor_df.le(factor_df.quantile(0.01, 1), 0)
+        big_mask = factor_df.ge(factor_df.quantile(0.975, 1), 0)
+        small_mask = factor_df.le(factor_df.quantile(0.025, 1), 0)
         factor_df[big_mask|small_mask] = 0
         factor_df_dic[factor] = factor_df
 

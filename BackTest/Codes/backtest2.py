@@ -35,18 +35,19 @@ if __name__ == '__main__':
     r = r.loc[r.index>=begin_date, :]
     r = r.loc[r.index<=end_date, :]
     
-    # r_hat_name_list = ['r_hat_ic_0', 'r_hat_iccov_0',
-    #               'r_hat_ic_2', 'r_hat_ic_4',
-    #               'r_hat_beta_0', 'r_hat_betacov_0',
-    #               'r_hat_beta_2', 'r_hat_beta_4']
-    r_hat_name_list = ['r_hat_beta_0',
-                  'r_hat_beta_2', 'r_hat_beta_4']
-    r_hat_dic = {r_hat_name : tools.standardize(pd.read_csv('%s/Results/%s.csv'%(gc.PREDICT_PATH, r_hat_name), index_col=[0], parse_dates=[0])) for r_hat_name in r_hat_name_list}
+    # r_hat_name_list = ['r_hat_betacov_0',]
+    r_hat_name_list = ['r_hat_betacov_1',
+                       'r_hat_beta_2', 'r_hat_beta_3']
+    # r_hat_name_list = ['r_hat_beta_0']
+    r_hat_dic = {r_hat_name : pd.read_csv('%s/Results/%s.csv'%(gc.PREDICT_PATH, r_hat_name), index_col=[0], parse_dates=[0]) for r_hat_name in r_hat_name_list}
+    
+    for r_hat_name in r_hat_name_list:
+        r_hat_dic[r_hat_name] = tools.standardize(r_hat_dic[r_hat_name])
     
     ic = DataFrame(index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_name_list)
     y = y.loc[r_hat_dic[r_hat_name_list[0]].index, r_hat_dic[r_hat_name_list[0]].columns]
     
-    halflife_mean = 60
+    halflife_mean = 250
     halflife_cov = 250
     lamb = 1e-2
     n = 5
@@ -57,7 +58,7 @@ if __name__ == '__main__':
     ic.to_csv('../Results/ic.csv')
     
     ic_mean_hat = ic.ewm(halflife=halflife_mean).mean().shift(lag)
-    ic_cov_hat = ic.ewm(halflife=halflife_mean).cov().shift(lag*len(r_hat_name_list))
+    ic_cov_hat = ic.ewm(halflife=halflife_cov).cov().shift(lag*len(r_hat_name_list))
     weight = DataFrame(index=ic.index, columns=ic.columns)
     for date in weight.index:
         weight.loc[date, :] = np.linalg.inv(ic_cov_hat.loc[date, :, :].values + lamb*np.eye(len(r_hat_name_list))).dot(ic_mean_hat.loc[date, :].values)
@@ -69,13 +70,16 @@ if __name__ == '__main__':
     r_hat = DataFrame(0, index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_dic[r_hat_name_list[0]].columns)
     for r_hat_name in r_hat_name_list:
         r_hat = r_hat.add(r_hat_dic[r_hat_name].mul(weight.loc[:, r_hat_name], 0), fill_value=0)
-    
+    # r_hat = DataFrame(0, index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_dic[r_hat_name_list[0]].columns)
+    # for r_hat_name in r_hat_name_list:
+    #     r_hat = r_hat.add(r_hat_dic[r_hat_name], fill_value=0)
+        
     print('回测')
     turn_rate = 0.2
     stock_num = 100
     trade_num = int(stock_num * turn_rate)
     
-    num_group = 800
+    num_group = 40
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
@@ -140,7 +144,7 @@ if __name__ == '__main__':
     r_hat = r_hat.loc[r.index, r.columns]
     
     plt.figure(figsize=(16,12))
-    IC = r_hat.fillna(0).corrwith(r.fillna(0), axis=1)
+    IC = r_hat.corrwith(y, axis=1)
     IC.cumsum().plot()
     plt.savefig('../Results/IC.png')
     
