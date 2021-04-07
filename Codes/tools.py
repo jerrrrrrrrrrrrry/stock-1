@@ -64,10 +64,10 @@ def get_industrys(level='L1', stocks=None):
             return stock in stocks
         industrys = {i:list(filter(cond, industrys[i])) for i in industrys.keys()}
     
-    stocks.clear()
-    for v in industrys.values():
-        stocks.extend(v)
-    stocks.sort()
+        stocks.clear()
+        for v in industrys.values():
+            stocks.extend(v)
+        stocks.sort()
     return industrys
 
 

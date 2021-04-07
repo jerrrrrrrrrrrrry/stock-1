@@ -135,10 +135,12 @@ if __name__ == '__main__':
     r_geye[r.isna()] = np.nan
     y[r.isna()] = np.nan
     
-    
-    
+    stocks_fina = []
+    stocks_fina.extend(list(industrys['801780.SI']))
+    stocks_fina.extend(list(industrys['801790.SI']))
     
     na_mask = st|yiziban|tingpai|blacklist
+    na_mask.loc[:, stocks_fina] = True
     
     y[na_mask] = np.nan
     r_jiaoyi[na_mask] = np.nan

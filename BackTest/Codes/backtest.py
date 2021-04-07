@@ -301,7 +301,7 @@ if __name__ == '__main__':
         r_hat = r_hat + d
     
     print('回测')
-    stock_num = 100
+    stock_num = 50
     trade_num = int(stock_num * turn_rate)
     
     num_group = 80

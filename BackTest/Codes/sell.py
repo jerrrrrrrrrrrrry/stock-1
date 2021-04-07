@@ -15,10 +15,10 @@ def main():
     position = [str(s) for s in position]
     position = ['300' + s if len(s)==3 else '3000' + s if len(s)==2 else s for s in position]
     
-    buy_list = ['000936', '601169', '002491', '601002', '300447',
-                '600369', '601789', '002170', '600312', '600170']
-    sell_list= ['603887', '600461', '000701', '002433', '300499',
-                '600051', '300427', '002275']
+    buy_list = ['603488', '000401', '603339', '300190', '600987',
+                '000690', '002217', '002277', '300034', '600345']
+    sell_list= ['601169', '002546', '600688', '600583', '603111',
+                '300393', '300095', '002538', '000716', ]
     
     position.extend(buy_list)
     position = list(set(position) - set(sell_list))
@@ -36,7 +36,7 @@ def main():
     print(len(position))
     
     date = today
-    date = '20210402'
+    date = '20210407'
     r_hat = pd.read_csv('../Results/r_hat.csv', index_col=[0], parse_dates=[0])
     
     rank = r_hat.loc[date, :].rank().loc[position].sort_values(ascending=False)
@@ -45,7 +45,7 @@ def main():
     na_mask = pd.read_csv('../../LabelBase/Data/na_mask.csv', index_col=[0], parse_dates=[0]).loc[date, :]
     
     r_hat_rank = r_hat.loc[date, :].rank().sort_values(ascending=False)
-    n = 20
+    n = 10
     for i in r_hat_rank.index:
         if n == 0:
             break

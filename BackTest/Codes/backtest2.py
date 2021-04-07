@@ -23,7 +23,7 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210402'
+    end_date = '20210407'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)
@@ -47,8 +47,8 @@ if __name__ == '__main__':
     ic = DataFrame(index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_name_list)
     y = y.loc[r_hat_dic[r_hat_name_list[0]].index, r_hat_dic[r_hat_name_list[0]].columns]
     
-    halflife_mean = 250
-    halflife_cov = 250
+    halflife_mean = 60
+    halflife_cov = 60
     lamb = 1e-2
     n = 5
     lag = n + 1
@@ -76,10 +76,10 @@ if __name__ == '__main__':
         
     print('回测')
     turn_rate = 0.2
-    stock_num = 100
+    stock_num = 50
     trade_num = int(stock_num * turn_rate)
     
-    num_group = 40
+    num_group = 10
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
