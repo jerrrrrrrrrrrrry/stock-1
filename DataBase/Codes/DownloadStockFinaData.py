@@ -11,16 +11,6 @@ import sys
 import os
 import multiprocessing as mp
 import pickle
-import Config
-
-sys.path.append(Config.GLOBALCONFIG_PATH)
-import Global_Config as gc
-import tools
-
-date = datetime.datetime.today().strftime('%Y%m%d')
-trade_cal = tools.get_trade_cal(start_date=date, end_date=date)
-if len(trade_cal) == 0:
-    sys.exit()
 
 if len(sys.argv) == 3:
     start_date = sys.argv[1]
@@ -54,10 +44,7 @@ def init(context):
         data = get_fundamentals(table='trading_derivative_indicator', symbols=symbols.loc[ind], start_date=start_date, end_date=end_date, 
                 fields='TCLOSE,NEGOTIABLEMV,TOTMKTCAP,TURNRATE,DY,EV,EVEBITDA,EVPS,LYDY,PB,PCTTM,PETTM,PETTMNPAAEI,PSTTM', df=True)
         if len(data) > 0:
-            if start_date == end_date:
-                data.index = [start_date]
-            else:
-                data.index = [timestamp.strftime('%Y%m%d') for timestamp in data.loc[:, 'end_date']]
+            data.index = [timestamp.strftime('%Y%m%d') for timestamp in data.loc[:, 'end_date']]
             data.drop(labels='pub_date', axis=1, inplace=True)
             data.drop(labels='end_date', axis=1, inplace=True)
             if os.path.exists('D:/stock/DataBase/StockTradingDerivativeData/Stock/%s.csv'%(filename.loc[ind])):

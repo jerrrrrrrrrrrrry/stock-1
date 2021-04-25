@@ -50,10 +50,10 @@ if __name__ == '__main__':
         stocks.extend(v)
     stocks.sort()
     
-    a = CORRMarket('CORRMarket', stocks=stocks, start_date='20200101', end_date='20210222')
+    a = CORRMarket('CORRMarket', stocks=stocks, start_date='20180101', end_date='20210222')
     
     a.generate_factor()
     
-    a.factor_analysis()
+    a.factor_analysis(num_group=5)
     
     

@@ -15,10 +15,10 @@ def main():
     position = [str(s) for s in position]
     position = ['300' + s if len(s)==3 else '3000' + s if len(s)==2 else s for s in position]
     
-    buy_list = ['603488', '000401', '603339', '300190', '600987',
-                '000690', '002217', '002277', '300034', '600345']
-    sell_list= ['601169', '002546', '600688', '600583', '603111',
-                '300393', '300095', '002538', '000716', ]
+    buy_list = ['002527', '600867', '300267', '002091', '300528',
+                '601608', '000815', '']
+    sell_list= ['300032', '603012', '002443', '300596', '300112',
+                '002267', '300018', '002498', '002137']
     
     position.extend(buy_list)
     position = list(set(position) - set(sell_list))
@@ -36,7 +36,7 @@ def main():
     print(len(position))
     
     date = today
-    date = '20210407'
+    date = '20210422'
     r_hat = pd.read_csv('../Results/r_hat.csv', index_col=[0], parse_dates=[0])
     
     rank = r_hat.loc[date, :].rank().loc[position].sort_values(ascending=False)

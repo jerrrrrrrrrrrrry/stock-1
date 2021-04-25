@@ -27,7 +27,7 @@ else:
     today = datetime.datetime.today().strftime('%Y%m%d')
     start = today
     end = today
-
+start = '20170101'
 pro = ts.pro_api()
 
 #获取行业分类
@@ -47,6 +47,7 @@ else:
 
 df = DataFrame()
 for trade_date in trade_cal:
+    time.sleep(0.3)
     hk_hold = pro.hk_hold(fields='ts_code, vol', start_date=trade_date, end_date=trade_date).set_index('ts_code')
     hk_hold.columns = [trade_date]
     df = pd.concat([df, hk_hold.T], axis=0)

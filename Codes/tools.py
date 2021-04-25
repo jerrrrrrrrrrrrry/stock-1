@@ -80,68 +80,12 @@ def get_stocks(cond=None):
     stocks = stocks.loc[stocks.list_date < datetime.datetime.today().strftime('%Y%m%d'), 'ts_code']
     stocks = list(filter(lambda x:x!='689009.SH', stocks))
     stocks = list(filter(lambda x:x!="600086.SH", stocks))
+    stocks = list(filter(lambda x:x!="600634.SH", stocks))
     return list(filter(cond, stocks))
-
-
-def get_stock_daily_data(stocks=None, industrys=None, industry=None, fields=['open',
-                                 'high',
-                                 'low',
-                                 'close',
-                                 'vol',
-                                 'amount',
-                                 'adj_factor']):
-    data = {}
-        
-    if not stocks:
-        if industry == 'all':
-            stocks = [j for i in industrys.values() for j in i]
-        else:
-            stocks = [j for i in industry for j in industrys[i]]
-    
-    for field in fields:
-        data[field] = DataFrame({stock: pd.read_csv('../DataBase/StockDailyData/Stock/%s.csv'%stock, index_col=[0], parse_dates=[0]).loc[:, field] for stock in stocks})
-        
-    return data
-
-
-def group_backtest(factor, r, n):
-    l = [(((factor.ge(factor.quantile(i/n, 1), 0)) & (factor.le(factor.quantile(i/n+1/n, 1), 0))) * n * r).mean(1).cumsum().rename('%s'%(i/n)) for i in range(n)]
-    for i in l:
-        (i - r.mean(1).cumsum()).plot()
-    plt.legend(['alpha %s'%i.name for i in l])
-    '''for i in l:
-        i.plot()
-    for i in l:
-        (i - r.mean(1).cumsum()).plot()
-    r.mean(1).cumsum().plot()
-    plt.legend([i.name for i in l]+['alpha %s'%i.name for i in l]+['benchmark'])'''
-    '''
-    for i in range(n):
-        q = i / n
-        position = (factor.gt(factor.quantile(q, 1), 0)) & (factor.lt(factor.quantile(q+1/n, 1), 0))
-        r_backtest = position * r
-        daily_r_backtest = r_backtest.mean(1)
-        daily_cumsum_r_backtest = daily_r_backtest.cumsum()
-    '''
-    
-    return
-
-
-def icir(factor, r, n=20, rank=False):
-    if rank:
-        x1 = DP.standardize(rankdata(factor))
-    else:
-        x1 = DP.standardize(factor)
-    x2 = DP.standardize(r)
-    ic = (x1 * x2).mean(1).fillna(0)
-    ir = ic.rolling(20).mean() / ic.rolling(20).std()
-    
-    return ic, ir
 
 
 def sharpe_ratio_ts(df, n):
     return df.rolling(n).mean() / df.rolling(n).std()
-
 
 def reg_ts(df, n):
     x = np.arange(n)
@@ -152,10 +96,6 @@ def reg_ts(df, n):
     e = df - y_hat
     
     return b, e
-
-
-def normalize(df):
-    return df.subtract(df.min(1), 0).divide(df.max(1) - df.min(1), 0)
 
 def centralize(data):
     return data.subtract(data.mean(1), 0)
@@ -172,26 +112,29 @@ def standardize(data):
 def ma_ratio(data, ma_short, ma_long):
     return data.rolling(ma_short).mean() / data.rolling(ma_long).mean()
 
-def normalize_industry(data, industrys, industry):
-    data_dic = {i:normalize(data.loc[:, industrys[i]]) for i in industry}
-    ret = pd.concat([df for df in data_dic.values()], axis=1)
-    
-    return ret
-
 def standardize_industry(data, industrys):
-    data_dic = {k:standardize(data.loc[:, industrys[k]]) for k in industrys.keys()}
+    data_dic = {k:standardize(DataFrame(data, columns=industrys[k])) for k in industrys.keys()}
     ret = pd.concat([df for df in data_dic.values()], axis=1)
     
-    # cols = list(ret.columns)
-    # bk_list = ['00', '30', '60', '68']
-    # bks = {bk: list(filter(lambda x:x[:2]==bk, cols)) for bk in bk_list}
-    
-    # data_dic = {k:standardize(ret.loc[:, bks[k]]) for k in bks.keys()}
-    # ret = pd.concat([df for df in data_dic.values()], axis=1)
     return ret
 
-def truncate_outliers(df, percent=0.05):
+def truncate(df, percent=0.05):
     tmp = df.copy()
-    tmp[tmp.le(tmp.quantile(percent, 1), 0) | tmp.ge(tmp.quantile(1-percent, 1), 0)] = 0
+    q1 = tmp.quantile(percent, 1)
+    q2 = tmp.quantile(1-percent, 1)
+    tmp[tmp.le(q1, 0)] = np.nan
+    tmp[tmp.ge(q2, 0)] = np.nan
+    
+    return tmp
+
+def winsorize(df, percent=0.05):
+    tmp = df.copy()
+    def f(s):
+        q1 = s.quantile(percent)
+        q2 = s.quantile(1-percent)
+        s[s<q1] = q1
+        s[s>q2] = q2
+        return s
+    tmp = tmp.apply(func=f, axis=1, result_type='expand')
     
     return tmp

@@ -31,9 +31,7 @@ class DHK(SingleFactor):
         hk = pd.read_csv('%s/StockMoneyData/HK.csv'%gc.DATABASE_PATH, index_col=[0], parse_dates=[0])
         hk.fillna(method='ffill', inplace=True)
         hk.fillna(0, inplace=True)
-        cols = list(filter(lambda x:x[0]=='3', hk.columns))
-        hk = DataFrame(hk.loc[:, cols], index=CLOSE.index, columns=cols)
-        
+        hk = DataFrame(hk, index=CLOSE.index, columns=hk.columns)
         CLOSE = CLOSE.loc[CLOSE.index >= self.start_date, :]
         CLOSE = CLOSE.loc[CLOSE.index <= self.end_date, :]
         
@@ -67,7 +65,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = DHK('DHK', stocks=stocks, start_date='20200101', end_date='20210301')
+    a = DHK('DHK', stocks=stocks, start_date='20180101', end_date='20210301')
     
     a.generate_factor()
     

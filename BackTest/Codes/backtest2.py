@@ -23,7 +23,7 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210407'
+    end_date = '20210423'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)
@@ -36,22 +36,24 @@ if __name__ == '__main__':
     r = r.loc[r.index<=end_date, :]
     
     # r_hat_name_list = ['r_hat_betacov_0',]
-    r_hat_name_list = ['r_hat_betacov_1',
+    r_hat_name_list = ['r_hat_beta_1',
                        'r_hat_beta_2', 'r_hat_beta_3']
     # r_hat_name_list = ['r_hat_beta_0']
     r_hat_dic = {r_hat_name : pd.read_csv('%s/Results/%s.csv'%(gc.PREDICT_PATH, r_hat_name), index_col=[0], parse_dates=[0]) for r_hat_name in r_hat_name_list}
     
     for r_hat_name in r_hat_name_list:
+        r_hat_dic[r_hat_name] = DataFrame(r_hat_dic[r_hat_name], index=r.index, columns=r.columns)
         r_hat_dic[r_hat_name] = tools.standardize(r_hat_dic[r_hat_name])
     
     ic = DataFrame(index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_name_list)
     y = y.loc[r_hat_dic[r_hat_name_list[0]].index, r_hat_dic[r_hat_name_list[0]].columns]
     
     halflife_mean = 60
-    halflife_cov = 60
-    lamb = 1e-2
+    halflife_cov = 250
+    a = 1
+    lamb = 1e-3
     n = 5
-    lag = n + 1
+    lag = n+1
     
     for r_hat_name in r_hat_name_list:
         ic.loc[:, r_hat_name] = y.corrwith(r_hat_dic[r_hat_name], 1)
@@ -61,18 +63,19 @@ if __name__ == '__main__':
     ic_cov_hat = ic.ewm(halflife=halflife_cov).cov().shift(lag*len(r_hat_name_list))
     weight = DataFrame(index=ic.index, columns=ic.columns)
     for date in weight.index:
-        weight.loc[date, :] = np.linalg.inv(ic_cov_hat.loc[date, :, :].values + lamb*np.eye(len(r_hat_name_list))).dot(ic_mean_hat.loc[date, :].values)
+        sigma_inv = np.linalg.inv((1 + a*np.eye(len(r_hat_name_list))) * ic_cov_hat.loc[date, :, :].values + lamb*np.eye(len(r_hat_name_list)))
+        weight.loc[date, :] = sigma_inv.dot(ic_mean_hat.loc[date, :].values)
     
     ic_mean_hat.to_csv('../Results/ic_mean_hat.csv')
     ic_cov_hat.to_csv('../Results/ic_cov_hat.csv')
     weight.to_csv('../Results/weight.csv')
     
-    r_hat = DataFrame(0, index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_dic[r_hat_name_list[0]].columns)
+    r_hat = DataFrame(0, index=r.index, columns=r.columns)
     for r_hat_name in r_hat_name_list:
         r_hat = r_hat.add(r_hat_dic[r_hat_name].mul(weight.loc[:, r_hat_name], 0), fill_value=0)
-    # r_hat = DataFrame(0, index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_dic[r_hat_name_list[0]].columns)
+    # r_hat = DataFrame(0, index=r.index, columns=r.columns)
     # for r_hat_name in r_hat_name_list:
-    #     r_hat = r_hat.add(r_hat_dic[r_hat_name], fill_value=0)
+    #     r_hat = r_hat.add(DataFrame(r_hat_dic[r_hat_name], index=r.index, columns=r.columns), fill_value=0)
         
     print('回测')
     turn_rate = 0.2
@@ -148,29 +151,68 @@ if __name__ == '__main__':
     IC.cumsum().plot()
     plt.savefig('../Results/IC.png')
     
-    plt.figure(figsize=(16, 12))
     factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
-    #factor_quantile[r.isna()] = np.nan
-    group_backtest = {}
+    factor_quantile[r.isna()] = np.nan
+    
     group_pos = {}
     for n in range(num_group):
         group_pos[n] = DataFrame((n/num_group <= factor_quantile) & (factor_quantile <= (n+1)/num_group))
         group_pos[n][~group_pos[n]] = np.nan
         group_pos[n] = 1 * group_pos[n]
-        group_backtest[n] = ((group_pos[n] * r).mean(1) - 1*r.mean(1)).cumsum().rename('%s'%(n/num_group))
-        group_backtest[n].plot()
-    plt.legend(['%s'%i for i in range(num_group)])
-    plt.savefig('../Results/groupbacktest.png')
     
     plt.figure(figsize=(16, 12))
-    group_hist = [group_backtest[i].iloc[np.where(group_backtest[i].notna())[0][-1]] for i in range(num_group)]
+    group_mean = {}
+    for n in range(num_group):
+        group_mean[n] = ((group_pos[n] * r).mean(1) - 1*r.mean(1)).cumsum().rename('%s'%(n/num_group))
+        group_mean[n].plot()
+    plt.legend(['%s'%i for i in range(num_group)])
+    plt.savefig('../Results/group_mean.png')
+    plt.figure(figsize=(16, 12))
+    group_hist = [group_mean[i].iloc[np.where(group_mean[i].notna())[0][-1]] for i in range(num_group)]
     plt.bar(range(num_group), group_hist)
-    plt.savefig('../Results/grouphist.png')
+    plt.savefig('../Results/group_mean_hist.png')
     
-    # plt.figure(figsize=(16,12))
-    # r.mad(1).cumsum().plot()
-    # plt.legend(['DIV'])
-    # plt.savefig('%s/Results/DIV.png'%gc.BACKTEST_PATH)
+    plt.figure(figsize=(16, 12))
+    group_std = {}
+    for n in range(num_group):
+        group_std[n] = (group_pos[n] * r).std(1).cumsum().rename('%s'%(n/num_group))
+        group_std[n].plot()
+    plt.legend(['%s'%i for i in range(num_group)])
+    plt.savefig('../Results/group_std.png')
+    plt.figure(figsize=(16, 12))
+    group_hist = [group_std[i].iloc[np.where(group_std[i].notna())[0][-1]] for i in range(num_group)]
+    plt.bar(range(num_group), group_hist)
+    plt.savefig('../Results/group_std_hist.png')
+    
+    plt.figure(figsize=(16, 12))
+    group_skew = {}
+    for n in range(num_group):
+        group_skew[n] = (group_pos[n] * r).skew(1).cumsum().rename('%s'%(n/num_group))
+        group_skew[n].plot()
+    plt.legend(['%s'%i for i in range(num_group)])
+    plt.savefig('../Results/group_skew.png')
+    plt.figure(figsize=(16, 12))
+    group_hist = [group_skew[i].iloc[np.where(group_skew[i].notna())[0][-1]] for i in range(num_group)]
+    plt.bar(range(num_group), group_hist)
+    plt.savefig('../Results/group_skew_hist.png')
+    
+    plt.figure(figsize=(16, 12))
+    group_kurt = {}
+    for n in range(num_group):
+        group_kurt[n] = (group_pos[n] * r).kurt(1).cumsum().rename('%s'%(n/num_group))
+        group_kurt[n].plot()
+    plt.legend(['%s'%i for i in range(num_group)])
+    plt.savefig('../Results/group_kurt.png')
+    plt.figure(figsize=(16, 12))
+    group_hist = [group_kurt[i].iloc[np.where(group_kurt[i].notna())[0][-1]] for i in range(num_group)]
+    plt.bar(range(num_group), group_hist)
+    plt.savefig('../Results/group_kurt_hist.png')
+    
+    
+    # plt.figure(figsize=(16, 12))
+    # group_hist = [group_backtest[i].iloc[np.where(group_backtest[i].notna())[0][-1]] for i in range(num_group)]
+    # plt.bar(range(num_group), group_hist)
+    # plt.savefig('../Results/grouphist.png')
     
     plt.figure(figsize=(16,12))
     pnl.cumsum().plot()

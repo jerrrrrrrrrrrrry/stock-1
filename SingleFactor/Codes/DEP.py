@@ -36,7 +36,7 @@ class DEP(SingleFactor):
 stocks = tools.get_stocks()
 
 
-a = DEP('DEP', stocks=stocks, start_date='20200101', end_date='20210221')
+a = DEP('DEP', stocks=stocks, start_date='20180101', end_date='20210221')
 
 a.generate_factor()
 

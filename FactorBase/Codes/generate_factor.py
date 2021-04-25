@@ -9,23 +9,31 @@ sys.path.append(Config.GLOBALCONFIG_PATH)
 import tools
 import Global_Config as gc
 
-def main(start_date, end_date):
-    #获取股票
-    stocks = tools.get_stocks()
-    #获取行业
-    industrys = tools.get_industrys(level='L1', stocks=stocks)
+if __name__ == '__main__':
     #获取时间
     t = datetime.datetime.today().strftime('%H%M%S')
+    start_date = datetime.datetime.today().strftime('%Y%m%d')
+    end_date = datetime.datetime.today().strftime('%Y%m%d')
+    # start_date = '20210423'
+    # end_date = '20210423'
+    # t = '20210423'
     if t < '150000':
         time_delta = datetime.timedelta(days=1)
     else:
         time_delta = datetime.timedelta(days=0)
-        
     start_date = datetime.datetime.strptime(start_date, '%Y%m%d') - time_delta
     end_date = datetime.datetime.strptime(end_date, '%Y%m%d') - time_delta
     start_date = start_date.strftime('%Y%m%d')
     end_date = end_date.strftime('%Y%m%d')
-    print(start_date)
+    trade_cal = tools.get_trade_cal(start_date=start_date, end_date=end_date)
+    if len(trade_cal) == 0:
+        sys.exit()
+    #获取股票
+    stocks = tools.get_stocks()
+    #获取行业
+    industrys = tools.get_industrys(level='L1', stocks=stocks)
+    
+    print(start_date, end_date)
     
     CLOSE = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'close'] for stock in stocks})
     dates = CLOSE.index
@@ -39,7 +47,7 @@ def main(start_date, end_date):
                 df.sort_index(0, inplace=True)
             df.sort_index(1, inplace=True)
             df.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, ind))
-    #遍历取pickle
+            
     files = os.listdir('./')
     files = list(filter(lambda x:len(x)>4, files))
     factors_1 = list(filter(lambda x:x[-5:]=='_1.py', files))
@@ -77,22 +85,5 @@ def main(start_date, end_date):
         factor.update_factor()
         if flag == 1:
             start_date = start_date_tmp
-            
-            
-if __name__ == '__main__':
-    if len(sys.argv) == 3:
-        start_date = sys.argv[1]
-        end_date = sys.argv[2]
-    elif len(sys.argv) == 2:
-        start_date = sys.argv[1]
-        end_date = sys.argv[1]
-    elif len(sys.argv) == 1:
-        start_date = datetime.datetime.today().strftime('%Y%m%d')
-        end_date = datetime.datetime.today().strftime('%Y%m%d')
-        trade_cal = tools.get_trade_cal(start_date=start_date, end_date=end_date)
-        if len(trade_cal) == 0:
-            sys.exit()
-    else:
-        print('date?')
-        sys.exit()
-    main(start_date, end_date)
+    
+    os.system('python ./preprocess_factor.py')
