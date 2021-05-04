@@ -26,13 +26,9 @@ if __name__ == '__main__':
     st = DataFrame({stock: data[stock].loc[:, 'st'] for stock in stocks})
     AMOUNT = DataFrame({stock: data[stock].loc[:, 'amount'] for stock in stocks})
     
-    stocks_2 = os.listdir('../../DataBase/StockTradingDerivativeData/Stock/')
-    stocks_2 = [stock[:-4] for stock in stocks_2]
-    stocks_2 = list(set(stocks).intersection(set(stocks_2)))
-    
-    mc = pd.read_csv('%s/Data/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0], parse_dates=[0])
-    MC = DataFrame(index=OPEN.index, columns=OPEN.columns)
-    MC.loc[:,:] = mc
+    # mc = pd.read_csv('%s/Data/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0], parse_dates=[0])
+    # MC = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    # MC.loc[:,:] = mc
     
     bp = pd.read_csv('%s/PreprocessData/BP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
     BP = DataFrame(index=OPEN.index, columns=OPEN.columns)
@@ -42,9 +38,9 @@ if __name__ == '__main__':
     EP = DataFrame(index=OPEN.index, columns=OPEN.columns)
     EP.loc[:,:] = ep
     
-    eps = pd.read_csv('%s/PreprocessData/EPS.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
-    EPS = DataFrame(index=OPEN.index, columns=OPEN.columns)
-    EPS.loc[:,:] = eps
+    # eps = pd.read_csv('%s/PreprocessData/EPS.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    # EPS = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    # EPS.loc[:,:] = eps
     
     dep = pd.read_csv('%s/PreprocessData/DEP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
     DEP = DataFrame(index=OPEN.index, columns=OPEN.columns)
@@ -54,25 +50,24 @@ if __name__ == '__main__':
     ROE = DataFrame(index=OPEN.index, columns=OPEN.columns)
     ROE.loc[:,:] = roe
     
-    droe = roe.diff(60)
-    DROE = DataFrame(index=OPEN.index, columns=OPEN.columns)
-    DROE.loc[:,:] = droe
+    # droe = roe.diff(60)
+    # DROE = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    # DROE.loc[:,:] = droe
     
-    qt = 0.66
+    qt = 0.9
     
     f = BP + EP + DEP + ROE
     
-    low_f = f.lt(f.ewm(halflife=20).mean().quantile(qt, 1), 0)
+    low_f = f.lt(f.ewm(halflife=60).mean().quantile(qt, 1), 0)
     
-    low_liquid = AMOUNT.lt(AMOUNT.ewm(halflife=20).mean().quantile(0.2, 1), 0)
+    low_liquid = AMOUNT.lt(AMOUNT.ewm(halflife=60).mean().quantile(0.2, 1), 0)
     
     low_price = CLOSE.le(1, 0)
     
     # low_bp = BP.lt(BP.ewm(halflife=20).mean().quantile(0.7, 1), 0)
-    low_mc = MC.lt(MC.ewm(halflife=20).mean().quantile(0.05, 1), 0)
     
     # blacklist = low_f|low_liquid|low_price|low_bp|low_mc
-    blacklist = low_f|low_liquid|low_price|low_mc
+    blacklist = low_f|low_liquid|low_price
     
     tingpai = (CLOSE.shift(-1) == np.nan) | (AMOUNT.shift(-1) == 0)
     
@@ -129,14 +124,24 @@ if __name__ == '__main__':
     
     
     y[na_mask] = np.nan
-    r_jiaoyi[na_mask] = np.nan
-    r[na_mask] = np.nan
-    r_rinei[na_mask] = np.nan
-    r_geye[na_mask] = np.nan
+    # r_jiaoyi[na_mask] = np.nan
+    # r[na_mask] = np.nan
+    # r_rinei[na_mask] = np.nan
+    # r_geye[na_mask] = np.nan
     
-    print(r_jiaoyi.mean(1).sum())
-    r_jiaoyi.mean(1).cumsum().plot()
+    r_plot = r_jiaoyi.copy()
+    r_plot[na_mask] = np.nan
+    print(r_plot.mean(1).sum())
+    r_plot.mean(1).cumsum().plot()
     
+    low_f.to_csv('../Data/low_f.csv')
+    low_liquid.to_csv('../Data/low_liquid.csv')
+    low_price.to_csv('../Data/low_price.csv')
+    st.to_csv('../Data/st.csv')
+    yiziban.to_csv('../Data/yiziban.csv')
+    tingpai.to_csv('../Data/tingpai.csv')
+    blacklist.to_csv('../Data/blacklist.csv')
+    list_mask.to_csv('../Data/list_mask.csv')
     na_mask.to_csv('../Data/na_mask.csv')
     y.to_csv('../Data/y.csv')
     y_ind.to_csv('../Data/y_ind.csv')

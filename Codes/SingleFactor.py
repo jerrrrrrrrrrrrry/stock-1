@@ -29,7 +29,7 @@ class SingleFactor:
         factor[factor==-np.inf] = np.nan
         return factor
     
-    def factor_analysis(self, industry_neutral=True, size_neutral=True, num_group=10):
+    def factor_analysis(self, industry_neutral=True, neutral_risk=['MC', 'BP'], size_neutral=True, num_group=10):
         self.factor = self.inf_to_nan(self.factor)
         stocks = self.stocks
         start_date = self.start_date
@@ -45,7 +45,7 @@ class SingleFactor:
             y = y.loc[y.index <= end_date, :]
             r_jiaoyi = r_jiaoyi.loc[r_jiaoyi.index <= end_date, :]
         
-        ys = [y.shift(-n) for n in range(10)]
+        ys = [r_jiaoyi.shift(-n) for n in range(10)]
         
         if not os.path.exists('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name)):
             os.mkdir('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name))
@@ -60,25 +60,31 @@ class SingleFactor:
             factor = tools.standardize(self.factor)
             self.factor_industry_neutral = None
         #市值中性
-        if size_neutral:
-            market_capitalization = DataFrame({stock: pd.read_csv('%s/StockTradingDerivativeData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'TOTMKTCAP'] for stock in self.stocks})
-            market_capitalization = np.log(market_capitalization)
-            if self.start_date:
-                market_capitalization = market_capitalization.loc[market_capitalization.index >= self.start_date, :]
-            if self.end_date:
-                market_capitalization = market_capitalization.loc[market_capitalization.index <= self.end_date, :]
-            market_capitalization = tools.standardize_industry(market_capitalization, industrys)
-            beta = (factor * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1)
-            factor = factor - market_capitalization.mul(beta, axis=0)
-            self.factor_industry_size_neutral = factor.copy()
-        
+        #风险中性
+        if neutral_risk:
+            risk_dic = {risk:pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, risk), index_col=[0], parse_dates=[0]) for risk in neutral_risk}
+            for risk in risk_dic.keys():
+                risk_dic[risk] = tools.standardize_industry(risk_dic[risk], industrys)
+            risk_df_list = [risk_df for risk_df in risk_dic.values()]
+            def neutral_apply(y, x_list):
+                date = y.name
+                X = DataFrame(index=y.index)
+                for x in x_list:
+                    X = pd.concat([X, x.loc[date, :]], axis=1)
+                X.fillna(0, inplace=True)
+                # X = sm.add_constant(X)
+                res = y - X.dot(np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y.fillna(0)))
+                return res
+            factor = factor.apply(func=neutral_apply, args=(risk_df_list,), axis=1)
+            self.factor_risk_neutral = factor.copy()
+        else:
+            self.factor_risk_neutral = None
         #因子分布
         plt.figure(figsize=(16,12))
         plt.hist(factor.fillna(0).values.flatten())
         plt.savefig('%s/Results/%s/hist.png'%(gc.SINGLEFACTOR_PATH, self.factor_name))
         
         #IC、IR、分组回测
-        #ys = [y1, y2, y3, y4]
         IC = {}
         IR = {}
         
@@ -87,13 +93,13 @@ class SingleFactor:
                 y_neutral = tools.standardize_industry(ys[i], industrys)
             else:
                 y_neutral = tools.standardize(ys[i])
-            if size_neutral:
-                y_neutral = y_neutral - market_capitalization.mul((y_neutral * market_capitalization).sum(1) / (market_capitalization * market_capitalization).sum(1), axis=0)
-
             IC[i] = (y_neutral * factor).mean(1) / factor.std(1) / y_neutral.std(1)
             IR[i] = IC[i].rolling(20).mean() / IC[i].rolling(20).std()
-            factor_quantile = DataFrame(factor.rank(axis=1), index=factor.index, columns=factor.columns).div(factor.notna().sum(1), axis=0)# / len(factor.columns)
-            factor_quantile[factor.isna()] = np.nan
+            
+            factor_tmp = DataFrame(factor, index=ys[0].index, columns=ys[0].columns)
+            factor_tmp[ys[0].isna()] = np.nan
+            
+            factor_quantile = DataFrame(factor_tmp.rank(axis=1), index=factor.index, columns=factor.columns).div(factor.notna().sum(1), axis=0)# / len(factor.columns)
             
             group_pos = {}
             for n in range(num_group):
@@ -167,14 +173,19 @@ class SingleFactor:
             
     def update_factor(self):
         self.generate_factor()
-        factor = self.inf_to_nan(self.factor)
-        if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
-            # if isinstance(factor.index[0], str):
-            #     factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0])
-            #     factor_old.index = [str(i) for i in factor_old.index]
-            # else:
-            #     factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
-            factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
-            
-            factor = pd.concat([factor_old.loc[factor_old.index<factor.index[0], :], factor], axis=0)
-        factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
+        if isinstance(self.factor, list):
+            for i in range(len(self.factor)):
+                factor = self.inf_to_nan(self.factor[i])
+                if os.path.exists('%s/Data/%s%s.csv'%(gc.FACTORBASE_PATH, self.factor_name, self.n_list[i])):
+                    factor_old = pd.read_csv('%s/Data/%s%s.csv'%(gc.FACTORBASE_PATH, self.factor_name, self.n_list[i]), index_col=[0], parse_dates=[0])
+                    
+                    factor = pd.concat([factor_old.loc[factor_old.index<factor.index[0], :], factor], axis=0)
+                factor.to_csv('%s/Data/%s%s.csv'%(gc.FACTORBASE_PATH, self.factor_name, self.n_list[i]))
+            factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
+        else:
+            factor = self.inf_to_nan(self.factor)
+            if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
+                factor_old = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name), index_col=[0], parse_dates=[0])
+                
+                factor = pd.concat([factor_old.loc[factor_old.index<factor.index[0], :], factor], axis=0)
+            factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))

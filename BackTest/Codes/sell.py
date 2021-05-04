@@ -8,17 +8,19 @@ Created on Tue Feb 23 22:53:44 2021
 import pandas as pd
 import pickle
 import datetime
-def main():
+                
+    
+if __name__ == '__main__':
     today = datetime.datetime.today().strftime('%Y%m%d')
     with open('./pos.pkl', 'rb') as f:
         position = pickle.load(f)
     position = [str(s) for s in position]
     position = ['300' + s if len(s)==3 else '3000' + s if len(s)==2 else s for s in position]
     
-    buy_list = ['002527', '600867', '300267', '002091', '300528',
-                '601608', '000815', '']
-    sell_list= ['300032', '603012', '002443', '300596', '300112',
-                '002267', '300018', '002498', '002137']
+    buy_list = ['002675', '600968', '002315', '000733', '002653',
+                '300596', '002522', '002864']
+    sell_list= ['300528', '002608', '002641', '002406', '600491',
+                '600819', '002091', '601002', '002046', ]
     
     position.extend(buy_list)
     position = list(set(position) - set(sell_list))
@@ -36,7 +38,7 @@ def main():
     print(len(position))
     
     date = today
-    date = '20210422'
+    date = '20210429'
     r_hat = pd.read_csv('../Results/r_hat.csv', index_col=[0], parse_dates=[0])
     
     rank = r_hat.loc[date, :].rank().loc[position].sort_values(ascending=False)
@@ -49,10 +51,12 @@ def main():
     for i in r_hat_rank.index:
         if n == 0:
             break
+        # print(i)
+        # print(i not in position)
+        # print(not na_mask.loc[i])
+        
+        # print(i not in position and  not na_mask.loc[i])
+        
         if i not in position and  not na_mask.loc[i]:
             print(i, r_hat_rank.loc[i])
             n = n - 1
-                
-    
-if __name__ == '__main__':
-    main()

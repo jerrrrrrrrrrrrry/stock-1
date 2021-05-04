@@ -25,10 +25,16 @@ class Amount(SingleFactor):
         AMOUNT = DataFrame({stock:pd.read_csv('%s/StockDailyData/Stock/%s.csv'%(gc.DATABASE_PATH, stock), index_col=[0], parse_dates=[0]).loc[:, 'amount'] for stock in self.stocks})
         
         AMOUNT = np.log(AMOUNT)
-        n = 1
-        a = AMOUNT.rolling(n).mean()
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        n_list = [5, 20, 60, 120, 250]
+        self.n_list = n_list
+        
+        a = []
+        for n in n_list:
+            a.append(AMOUNT.rolling(n).mean())
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

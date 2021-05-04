@@ -29,10 +29,17 @@ class CloseToAverage(SingleFactor):
         amount = DataFrame({stock:data[stock].loc[:, 'amount'] for stock in self.stocks})
         volume = DataFrame({stock:data[stock].loc[:, 'vol'] for stock in self.stocks})
         average_price = amount / volume * 10
-        a = np.log(CLOSE / average_price)
         
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        n_list = [1, 3, 5, 10, 20, 60, 120, 250]
+        
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            a.append(np.log(CLOSE / average_price).rolling(n).mean())
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

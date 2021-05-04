@@ -27,12 +27,17 @@ class CORRMarket(SingleFactor):
         CLOSE.fillna(method='ffill', inplace=True)
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
-        n = 20
-        corrmarket = r.rolling(n).corr(r_m)
+        n_list = [5, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            corrmarket = r.rolling(n).corr(r_m)
+            
+            a.append(corrmarket)
         
-        a = corrmarket
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

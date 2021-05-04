@@ -30,10 +30,16 @@ class Sharpe(SingleFactor):
         ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
         r = np.log(CLOSE).diff()
-        n = 20
-        a = r.rolling(n).mean() / r.rolling(n).std()
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        
+        n_list = [5, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            a.append(r.rolling(n).mean() / r.rolling(n).std())
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

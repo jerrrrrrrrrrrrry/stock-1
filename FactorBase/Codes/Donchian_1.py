@@ -28,12 +28,17 @@ class Donchian(SingleFactor):
         CLOSE = DataFrame({stock:data[stock].loc[:, 'close'] for stock in self.stocks})
         ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
-        n = 60
-        UP = CLOSE.rolling(n).max()
-        DOWN = CLOSE.rolling(n).min()
-        a = (CLOSE - DOWN) / (UP - DOWN)
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        n_list = [5, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            UP = CLOSE.rolling(n).max()
+            DOWN = CLOSE.rolling(n).min()
+            a.append((CLOSE - DOWN) / (UP - DOWN))
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

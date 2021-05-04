@@ -29,9 +29,16 @@ class Momentum(SingleFactor):
         CLOSE = DataFrame({stock:data[stock].loc[:, 'close'] for stock in self.stocks})
         ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
-        a = np.log(CLOSE).diff(5)
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        
+        n_list = [1, 3, 5, 10, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            a.append(np.log(CLOSE).diff(n))
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

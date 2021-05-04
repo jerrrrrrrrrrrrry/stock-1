@@ -41,11 +41,16 @@ class TSRegBeta(SingleFactor):
             e = df - y_hat
 
             return b, e
-        n = 10
-        b, e = reg_ts(CLOSE, n)
-        a = b
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        n_list = [5, 10, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            b, e = reg_ts(CLOSE, n)
+            a.append(b)
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 

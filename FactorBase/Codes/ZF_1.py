@@ -33,16 +33,27 @@ class ZF(SingleFactor):
         HIGH.fillna(method='ffill', inplace=True)
         LOW.fillna(method='ffill', inplace=True)
         
-        # SYX = HIGH - (OPEN + CLOSE + np.abs(OPEN-CLOSE)) / 2
-        # XYX = (OPEN + CLOSE - np.abs(OPEN-CLOSE)) / 2 - LOW
+        # # SYX = HIGH - (OPEN + CLOSE + np.abs(OPEN-CLOSE)) / 2
+        # # XYX = (OPEN + CLOSE - np.abs(OPEN-CLOSE)) / 2 - LOW
         
-        # SYX = SYX / SYX.rolling(20).mean()
-        # XYX = XYX / XYX.rolling(20).mean()
+        # # SYX = SYX / SYX.rolling(20).mean()
+        # # XYX = XYX / XYX.rolling(20).mean()
         
-        # a = (SYX + XYX).rolling(20).std() / (SYX + XYX).rolling(20).mean()
-        a = (HIGH - LOW).rolling(20).std() / (HIGH - LOW).rolling(20).mean()
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        # # a = (SYX + XYX).rolling(20).std() / (SYX + XYX).rolling(20).mean()
+        # a = (HIGH - LOW).rolling(20).std() / (HIGH - LOW).rolling(20).mean()
+        # a = a.loc[a.index >= self.start_date, :]
+        # a = a.loc[a.index <= self.end_date, :]
+        
+        n_list = [3, 5, 10, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            a.append((HIGH - LOW).rolling(n).std() / (HIGH - LOW).rolling(n).mean())
+        
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 

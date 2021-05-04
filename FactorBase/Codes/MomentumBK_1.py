@@ -33,18 +33,24 @@ class MomentumBK(SingleFactor):
         ADJ.fillna(method='ffill', inplace=True)
         
         CLOSE = CLOSE * ADJ
-        r = np.log(CLOSE).diff(20)
+        n_list = [1, 3, 5, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            r = np.log(CLOSE).diff(n)
+            
+            
+            cols = list(r.columns)
+            bk_list = ['00', '30', '60', '68']
+            bks = {bk: list(filter(lambda x:x[:2]==bk, cols)) for bk in bk_list}
+            
+            a.append(DataFrame({col: r.loc[:, bks[col[:2]]].mean(1) + np.random.randn(len(r))/1000 for col in cols}))        
         
         
-        cols = list(r.columns)
-        bk_list = ['00', '30', '60', '68']
-        bks = {bk: list(filter(lambda x:x[:2]==bk, cols)) for bk in bk_list}
-        
-        a = DataFrame({col: r.loc[:, bks[col[:2]]].mean(1) + np.random.randn(len(r))/1000 for col in cols})
-        
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
-        self.factor = tools.standardize(a)
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
+        self.factor = a
         
 #%%
 

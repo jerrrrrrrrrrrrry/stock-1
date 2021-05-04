@@ -28,7 +28,8 @@ class Alpha(SingleFactor):
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
         
-        n = 20
+        n_list = [5, 20, 60, 120, 250]
+        self.n_list = n_list
         
         def reg(y, x, n):
             lxx = (x**2).rolling(n).sum() - n * (x.rolling(n).mean()**2)
@@ -38,11 +39,14 @@ class Alpha(SingleFactor):
 
             return alpha, beta
         
-        alpha, beta = reg(r, DataFrame({stock:r_m for stock in r.columns}), n)
+        a = []
+        for n in n_list:
+            alpha, beta = reg(r, DataFrame({stock:r_m for stock in r.columns}), n)
+            a.append(alpha)
         
-        a = alpha
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 

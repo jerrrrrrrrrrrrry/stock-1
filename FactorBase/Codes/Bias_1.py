@@ -29,10 +29,18 @@ class Bias(SingleFactor):
         CLOSE = DataFrame({stock:data[stock].loc[:, 'close'] for stock in self.stocks})
         ADJ = DataFrame({stock:data[stock].loc[:, 'adj_factor'] for stock in self.stocks})
         CLOSE = CLOSE * ADJ
-        MA = CLOSE.rolling(20).mean()
-        a = np.log(CLOSE / MA)
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        
+        n_list = [5, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            
+            MA = CLOSE.rolling(n).mean()
+            a.append(np.log(CLOSE / MA))
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

@@ -33,9 +33,16 @@ class Jump(SingleFactor):
         
         OPEN = OPEN * ADJ
         CLOSE = CLOSE * ADJ
-        a = np.log(OPEN / CLOSE.shift())
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        jump = np.log(OPEN / CLOSE.shift())
+        n_list = [1, 3, 5, 10, 20]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            a.append(jump.rolling(n).mean())
+        
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 #%%

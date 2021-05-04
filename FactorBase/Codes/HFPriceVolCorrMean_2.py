@@ -21,12 +21,14 @@ class HFPriceVolCorrMean(SingleFactor):
     def generate_factor(self):
         corr = pd.read_csv('%s/Data/HFPriceVolCorr.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
         corr.fillna(method='ffill', inplace=True)
-        n = 20
-        corr_mean = corr.rolling(n).mean()
-        
-        a = corr_mean
-        a = a.loc[a.index >= self.start_date, :]
-        a = a.loc[a.index <= self.end_date, :]
+        n_list = [1, 3, 5, 10, 20, 60, 120, 250]
+        self.n_list = n_list
+        a = []
+        for n in n_list:
+            a.append(corr.rolling(n).mean())
+        for i in range(len(a)):
+            a[i] = a[i].loc[a[i].index >= self.start_date, :]
+            a[i] = a[i].loc[a[i].index <= self.end_date, :]
         self.factor = a
 
 
