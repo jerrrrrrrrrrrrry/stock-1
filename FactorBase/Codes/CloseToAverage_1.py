@@ -30,7 +30,7 @@ class CloseToAverage(SingleFactor):
         volume = DataFrame({stock:data[stock].loc[:, 'vol'] for stock in self.stocks})
         average_price = amount / volume * 10
         
-        n_list = [1, 3, 5, 10, 20, 60, 120, 250]
+        n_list = [1, 3, 5, 10, 20]
         
         self.n_list = n_list
         a = []

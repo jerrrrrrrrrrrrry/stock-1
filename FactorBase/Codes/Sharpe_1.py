@@ -31,7 +31,7 @@ class Sharpe(SingleFactor):
         CLOSE = CLOSE * ADJ
         r = np.log(CLOSE).diff()
         
-        n_list = [5, 20, 60, 120, 250]
+        n_list = [5, 10, 20, 60, 120, 250]
         self.n_list = n_list
         a = []
         for n in n_list:

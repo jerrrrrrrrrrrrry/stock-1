@@ -23,19 +23,33 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210430'
+    end_date = '20210511'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)
     trade_cal = [pd.Timestamp(i) for i in trade_cal]
     
     r = pd.read_csv('%s/Data/r_jiaoyi.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    r_hold = pd.read_csv('%s/Data/r.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    r_buy = pd.read_csv('%s/Data/r_rinei.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    r_sell = pd.read_csv('%s/Data/r_geye.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
+    
     r.fillna(r.mean(1), inplace=True)
+    r_hold.fillna(r_hold.mean(1), inplace=True)
+    r_buy.fillna(r_buy.mean(1), inplace=True)
+    r_sell.fillna(r_sell.mean(1), inplace=True)
+    
     y = pd.read_csv('%s/Data/y.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     na_mask = pd.read_csv('%s/Data/na_mask.csv'%gc.LABELBASE_PATH, index_col=[0], parse_dates=[0])
     
     r = r.loc[r.index>=begin_date, :]
     r = r.loc[r.index<=end_date, :]
+    r_hold = r_hold.loc[r_hold.index>=begin_date, :]
+    r_hold = r_hold.loc[r_hold.index<=end_date, :]
+    r_buy = r_buy.loc[r_buy.index>=begin_date, :]
+    r_buy = r_buy.loc[r_buy.index<=end_date, :]
+    r_sell = r_sell.loc[r_sell.index>=begin_date, :]
+    r_sell = r_sell.loc[r_sell.index<=end_date, :]
     
     # r_hat_name_list = ['r_hat_betacov_0',]
     r_hat_name_list = ['r_hat_beta_1',
@@ -88,21 +102,27 @@ if __name__ == '__main__':
     num_group = 10
     
     df_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
-    position_init = []
-    for stock in r_hat.iloc[0, :].sort_values(ascending=False).index:
-        if not na_mask.loc[na_mask.index[0], stock]:
-            position_init.append(stock)
-            if len(position_init)==stock_num:
-                df_position.iloc[0, :] = position_init
+    # position_init = []
+    # for stock in r_hat.iloc[0, :].sort_values(ascending=False).index:
+    #     if not na_mask.loc[na_mask.index[0], stock]:
+    #         position_init.append(stock)
+    #         if len(position_init)==stock_num:
+    #             df_position.iloc[0, :] = position_init
     df_position.iloc[0, :] = list(r_hat.iloc[0, :].sort_values(ascending=False).iloc[:stock_num].index)
 
     df_pnl = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     
     df_rank_position = DataFrame(index=trade_cal, columns=list(range(stock_num)))
     
-    df_sell = DataFrame(index=trade_cal, columns=list(range(trade_num)))
-    
     df_stock_sort = DataFrame(index=trade_cal, columns=list(range(len(r_hat.columns))))
+    
+    df_sell = DataFrame(index=trade_cal, columns=list(range(trade_num)))
+    df_buy = DataFrame(index=trade_cal, columns=list(range(trade_num)))
+    df_hold = DataFrame(index=trade_cal, columns=list(range(stock_num-trade_num)))
+    
+    df_pnl_buy = DataFrame(index=trade_cal, columns=list(range(trade_num)))
+    df_pnl_sell = DataFrame(index=trade_cal, columns=list(range(trade_num)))
+    df_pnl_hold = DataFrame(index=trade_cal, columns=list(range(stock_num-trade_num)))
     
     pre_date = df_position.index[0]
     for date in df_position.index[1:]:
@@ -113,12 +133,21 @@ if __name__ == '__main__':
         df_sell.loc[date, :] = list(r_hat.loc[date, pre_position].sort_values(ascending=True).iloc[:trade_num].index)
         stocks = r_hat.loc[date, :].sort_values(ascending=False).index
         df_stock_sort.loc[date, :] = stocks.values
+        buy = []
         for stock in stocks:
             if stock not in position:
                 if not na_mask.loc[date, stock]:
                     position.append(stock)
+                    buy.append(stock)
                     if len(position) >= stock_num:
                         break
+        df_buy.loc[date, :] = buy
+        df_hold.loc[date, :] = list(set(pre_position) - set(df_sell.loc[date, :]))
+        
+        df_pnl_hold.loc[date, :] = r_hold.loc[date, df_hold.loc[date, :]].values
+        df_pnl_buy.loc[date, :] = r_buy.loc[date, df_buy.loc[date, :]].values
+        df_pnl_sell.loc[date, :] = r_sell.loc[date, df_sell.loc[date, :]].values
+        
         rank = r_hat.loc[date, :].rank().loc[position].sort_values(ascending=False)
         df_rank_position.loc[date, :] = [{stock:rank.loc[stock]} for stock in rank.index]
 
@@ -135,7 +164,9 @@ if __name__ == '__main__':
         df_pnl.loc[date, :] = r.loc[date, position].values
         pre_date = date
     
-    pnl = df_pnl.mean(1)
+    df_pnl_shipan = pd.concat([df_pnl_hold, df_pnl_buy, df_pnl_sell], axis=1)
+    
+    pnl = df_pnl_shipan.mean(1)
     
     pnl.fillna(r.mean(1), inplace=True)
     
@@ -145,6 +176,7 @@ if __name__ == '__main__':
     df_sell.to_csv('%s/Results/df_sell.csv'%gc.BACKTEST_PATH)
     df_position.to_csv('%s/Results/df_position.csv'%gc.BACKTEST_PATH)
     df_pnl.to_csv('%s/Results/df_pnl.csv'%gc.BACKTEST_PATH)
+    df_pnl_shipan.to_csv('%s/Results/df_pnl_shipan.csv'%gc.BACKTEST_PATH)
     pnl.to_csv('%s/Results/pnl.csv'%gc.BACKTEST_PATH)
     
     r_hat = r_hat.loc[r.index, r.columns]
@@ -220,23 +252,23 @@ if __name__ == '__main__':
     
     
     plt.figure(figsize=(16,12))
-    r.mean(1).cumsum().plot()
-    r_white_list = DataFrame(r, index=na_mask.index, columns=na_mask.columns)
+    r_hold.mean(1).cumsum().plot()
+    r_white_list = DataFrame(r_hold, index=na_mask.index, columns=na_mask.columns)
     r_white_list[na_mask] = np.nan
     r_white_list.mean(1).cumsum().plot()
     pnl.cumsum().plot()
     
-    (r_white_list.mean(1) - r.mean(1)).cumsum().plot()
+    (r_white_list.mean(1) - r_hold.mean(1)).cumsum().plot()
     (pnl - r_white_list.mean(1)).cumsum().plot()
-    alpha = pnl - r.mean(1)
+    alpha = pnl - r_hold.mean(1)
     alpha.cumsum().plot()
     plt.legend(['BENCHMARK', 'WHITE_LIST', 'PNL', 'ALPHA_WHITE_LIST', 'ALPHA_MODEL', 'ALPHA'])
     plt.savefig('%s/Results/backtest_sum.png'%gc.BACKTEST_PATH)
     
     plt.figure(figsize=(16,12))
     (1+pnl).cumprod().plot()
-    (1+r.mean(1)).cumprod().plot()
-    ((1+pnl).cumprod() / (1+r.mean(1)).cumprod()).plot()
+    (1+r_hold.mean(1)).cumprod().plot()
+    ((1+pnl).cumprod() / (1+r_hold.mean(1)).cumprod()).plot()
     plt.legend(['PNL', 'BENCHMARK', 'ALPHA'])
     plt.savefig('%s/Results/backtest_prod.png'%gc.BACKTEST_PATH)
     

@@ -27,7 +27,7 @@ class CORRMarket(SingleFactor):
         CLOSE.fillna(method='ffill', inplace=True)
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
-        n_list = [5, 20, 60, 120, 250]
+        n_list = [5, 10, 20, 60, 120]
         self.n_list = n_list
         a = []
         for n in n_list:

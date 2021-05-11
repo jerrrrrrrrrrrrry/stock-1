@@ -21,7 +21,7 @@ class HFVolPowerMean(SingleFactor):
     def generate_factor(self):
         vol = pd.read_csv('%s/Data/HFVolPower.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
         vol.fillna(method='ffill', inplace=True)
-        n_list = [1, 3, 5, 10, 20, 60, 120, 250]
+        n_list = [3, 5, 10, 20, 60]
         self.n_list = n_list
         a = []
         for n in n_list:

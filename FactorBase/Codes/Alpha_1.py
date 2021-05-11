@@ -28,7 +28,7 @@ class Alpha(SingleFactor):
         r = np.log(CLOSE).diff()
         r_m = r.mean(1)
         
-        n_list = [5, 20, 60, 120, 250]
+        n_list = [3, 5, 10, 20, 60]
         self.n_list = n_list
         
         def reg(y, x, n):

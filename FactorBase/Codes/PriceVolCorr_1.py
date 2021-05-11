@@ -35,7 +35,7 @@ class PriceVolCorr(SingleFactor):
         CLOSE = np.log(CLOSE)
         AMOUNT = np.log(AMOUNT)
         
-        n_list = [3, 5, 10, 20, 60, 120, 250]
+        n_list = [5, 10, 20, 60]
         self.n_list = n_list
         a = []
         for n in n_list:

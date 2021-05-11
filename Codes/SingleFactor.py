@@ -178,10 +178,10 @@ class SingleFactor:
                 factor = self.inf_to_nan(self.factor[i])
                 if os.path.exists('%s/Data/%s%s.csv'%(gc.FACTORBASE_PATH, self.factor_name, self.n_list[i])):
                     factor_old = pd.read_csv('%s/Data/%s%s.csv'%(gc.FACTORBASE_PATH, self.factor_name, self.n_list[i]), index_col=[0], parse_dates=[0])
-                    
+                
                     factor = pd.concat([factor_old.loc[factor_old.index<factor.index[0], :], factor], axis=0)
                 factor.to_csv('%s/Data/%s%s.csv'%(gc.FACTORBASE_PATH, self.factor_name, self.n_list[i]))
-            factor.to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
+            factor.iloc[-1,:].to_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name))
         else:
             factor = self.inf_to_nan(self.factor)
             if os.path.exists('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, self.factor_name)):
