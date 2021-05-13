@@ -63,10 +63,10 @@ if __name__ == '__main__':
         else:
             y = y_neutral_ind
             x = DataFrame(x, index=y.index, columns=y.columns)
+            big_mask = x.ge(x.quantile(0.975, 1), 0)
+            small_mask = x.le(x.quantile(0.025, 1), 0)
             x[y.isna()] = np.nan
-        big_mask = x.ge(x.quantile(0.975, 1), 0)
-        small_mask = x.le(x.quantile(0.025, 1), 0)
-        x[big_mask|small_mask] = np.nan
+            x[big_mask|small_mask] = np.nan
         
         y_pos = y.copy()
         y_neg = y.copy()

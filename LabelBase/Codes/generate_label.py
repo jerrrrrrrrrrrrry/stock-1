@@ -54,13 +54,13 @@ if __name__ == '__main__':
     # DROE = DataFrame(index=OPEN.index, columns=OPEN.columns)
     # DROE.loc[:,:] = droe
     
-    qt = 0.9
+    qt = 0.666
     
     f = BP + EP + DEP + ROE
     
     low_f = f.lt(f.ewm(halflife=60).mean().quantile(qt, 1), 0)
     
-    low_liquid = AMOUNT.lt(AMOUNT.ewm(halflife=60).mean().quantile(0.2, 1), 0)
+    low_liquid = AMOUNT.lt(AMOUNT.ewm(halflife=60).mean().quantile(0.1, 1), 0)
     
     low_price = CLOSE.le(1, 0)
     

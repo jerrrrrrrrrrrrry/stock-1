@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # factors.extend(['MC', 'BP'])
     factors.extend(['TurnRate1', 'TurnRate5', 'TurnRate20', 'TurnRate60'])
     # factors.extend(['DEP'])
-    # factors.extend(['ROE', 'EP', 'DEP'])
+    factors.extend(['ROE', 'EP', 'DEP'])
     #factors.extend(['MomentumInd', 'MomentumBK'])
     
     factors.extend(['Momentum5', 'Momentum20'])

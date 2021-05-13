@@ -17,10 +17,10 @@ if __name__ == '__main__':
     position = [str(s) for s in position]
     position = ['300' + s if len(s)==3 else '3000' + s if len(s)==2 else s for s in position]
     
-    buy_list = ['603609', '600633', '603369', '002088', '300415',
-                '600269', '603063']
-    sell_list= ['600968', '600996', '603161', '002462', '000815',
-                '601801', '002216', '600548', '300145', '601218']
+    buy_list = ['603686', '000028', '000716', '601801', '002025',
+                '605123', '600027', '002234']
+    sell_list= ['600064', '600757', '600633', '600862', '600761',
+                '002661', '000547', '300443', '000407', '603488']
     
     position.extend(buy_list)
     position = list(set(position) - set(sell_list))
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     print(len(position))
     
     date = today
-    date = '20210511'
+    date = '20210513'
     r_hat = pd.read_csv('../Results/r_hat.csv', index_col=[0], parse_dates=[0])
     
     na_mask = pd.read_csv('../../LabelBase/Data/na_mask.csv', index_col=[0], parse_dates=[0]).loc[date, :]
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # print(rank)
     for stock in rank.index:
         print(stock, rank.loc[stock], na_mask.loc[stock])
-    print('------')
+    print('---%s---'%rank.name)
     r_hat_rank = r_hat.loc[date, :].rank().sort_values(ascending=False)
     n = 10
     for i in r_hat_rank.index:

@@ -50,9 +50,9 @@ def main(factors):
         print(factor)
         factor_df = pd.read_csv('%s/PreprocessData/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
         factor_df = DataFrame(factor_df, index=na_mask.index, columns=na_mask.columns)
-        factor_df[na_mask.isna()] = np.nan
         big_mask = factor_df.ge(factor_df.quantile(0.975, 1), 0)
         small_mask = factor_df.le(factor_df.quantile(0.025, 1), 0)
+        factor_df[na_mask.isna()] = np.nan
         factor_df[big_mask|small_mask] = 0
         factor_df_dic[factor] = factor_df
 
@@ -64,9 +64,9 @@ def main(factors):
     beta_neg.fillna(method='ffill', inplace=True)
     beta_pos.fillna(0, inplace=True)
     beta_neg.fillna(0, inplace=True)
-    halflife_mean = 60
+    halflife_mean = 120
     halflife_cov = 250
-    a = 0.5
+    a = 0.3
     lamb = 5e-4
     n = 5
     lag = n + 1
