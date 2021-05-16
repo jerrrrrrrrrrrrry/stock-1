@@ -10,9 +10,8 @@ import multiprocessing as mp
 if __name__ == '__main__':
     factors = []
     # factors.extend(['MC', 'BP'])
-    factors.extend(['TurnRate1', 'TurnRate5', 'TurnRate20', 'TurnRate60'])
-    # factors.extend(['DEP'])
-    factors.extend(['ROE', 'EP', 'DEP'])
+    factors.extend(['TurnRate1', 'TurnRate20'])
+    # factors.extend(['ROE', 'EP', 'DEP', 'CP', 'BP'])
     #factors.extend(['MomentumInd', 'MomentumBK'])
     
     factors.extend(['Momentum5', 'Momentum20'])
@@ -27,11 +26,11 @@ if __name__ == '__main__':
     factors.extend(['Skew20', 'Skew60'])
     
     # factors.extend(['RQPM'])
-    factors.extend(['HFReversalMean20', 'HFReversalMean60'])
-    factors.extend(['HFStdMean20', 'HFStdMean60'])
-    factors.extend(['HFUID20', 'HFUID60'])
-    factors.extend(['HFSkewMean20', 'HFSkewMean60'])
-    factors.extend(['HFVolMean20', 'HFVolMean60'])
+    # factors.extend(['HFReversalMean20', 'HFReversalMean60'])
+    # factors.extend(['HFStdMean20', 'HFStdMean60'])
+    # factors.extend(['HFUID20', 'HFUID60'])
+    # factors.extend(['HFSkewMean20', 'HFSkewMean60'])
+    # factors.extend(['HFVolMean20', 'HFVolMean60'])
     # factors.extend(['HFVolPowerMean20'])
     
     pool = mp.Pool(4)

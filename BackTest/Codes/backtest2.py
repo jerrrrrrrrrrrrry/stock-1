@@ -23,7 +23,7 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210513'
+    end_date = '20210514'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)

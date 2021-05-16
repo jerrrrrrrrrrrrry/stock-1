@@ -41,7 +41,7 @@ if __name__ == '__main__':
     #获取股票
     stocks = tools.get_stocks()
     
-    a = SP('SP', stocks=stocks, start_date='20200101', end_date='20201010')
+    a = SP('SP', stocks=stocks, start_date='20180101', end_date='20210501')
     
     a.generate_factor()
     

@@ -26,7 +26,7 @@ if __name__ == '__main__':
     st = DataFrame({stock: data[stock].loc[:, 'st'] for stock in stocks})
     AMOUNT = DataFrame({stock: data[stock].loc[:, 'amount'] for stock in stocks})
     
-    # mc = pd.read_csv('%s/Data/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0], parse_dates=[0])
+    # mc = pd.read_csv('%s/PreprocessData/MC.csv'%(gc.FACTORBASE_PATH), index_col=[0], parse_dates=[0])
     # MC = DataFrame(index=OPEN.index, columns=OPEN.columns)
     # MC.loc[:,:] = mc
     
@@ -37,6 +37,18 @@ if __name__ == '__main__':
     ep = pd.read_csv('%s/PreprocessData/EP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
     EP = DataFrame(index=OPEN.index, columns=OPEN.columns)
     EP.loc[:,:] = ep
+    
+    cp = pd.read_csv('%s/PreprocessData/CP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    CP = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    CP.loc[:,:] = cp
+    
+    sp = pd.read_csv('%s/PreprocessData/SP.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    SP = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    SP.loc[:,:] = sp
+    
+    dy = pd.read_csv('%s/PreprocessData/DY.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
+    DY = DataFrame(index=OPEN.index, columns=OPEN.columns)
+    DY.loc[:,:] = dy
     
     # eps = pd.read_csv('%s/PreprocessData/EPS.csv'%gc.FACTORBASE_PATH, index_col=[0], parse_dates=[0])
     # EPS = DataFrame(index=OPEN.index, columns=OPEN.columns)
@@ -55,10 +67,13 @@ if __name__ == '__main__':
     # DROE.loc[:,:] = droe
     
     qt = 0.666
+    #dep0.3,dy0.4,ep0.5,cp0.2,sp0.05,roe0.4
+    f = 4*BP + 5*EP + 5*CP + 1*SP + 1*DY + 5*DEP + 6*ROE
+    # ic = f.corrwith(y, axis=1)
+    # print(ic.sum()/ic.std())
+    # f.corrwith(y, axis=1).cumsum().plot()
     
-    f = BP + EP + DEP + ROE
-    
-    low_f = f.lt(f.ewm(halflife=60).mean().quantile(qt, 1), 0)
+    low_f = f.lt(f.quantile(qt, 1), 0)
     
     low_liquid = AMOUNT.lt(AMOUNT.ewm(halflife=60).mean().quantile(0.1, 1), 0)
     

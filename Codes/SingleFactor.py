@@ -45,7 +45,7 @@ class SingleFactor:
             y = y.loc[y.index <= end_date, :]
             r_jiaoyi = r_jiaoyi.loc[r_jiaoyi.index <= end_date, :]
         
-        ys = [r_jiaoyi.shift(-n) for n in range(10)]
+        ys = [r_jiaoyi.shift(-n) for n in range(5)]
         
         if not os.path.exists('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name)):
             os.mkdir('%s/Results/%s'%(gc.SINGLEFACTOR_PATH, self.factor_name))
@@ -143,17 +143,17 @@ class SingleFactor:
             plt.bar(range(num_group), group_hist)
             plt.savefig('%s/Results/%s/group_skew_hist%s.png'%(gc.SINGLEFACTOR_PATH, self.factor_name, i))
             
-            plt.figure(figsize=(16, 12))
-            group_kurt = {}
-            for n in range(num_group):
-                group_kurt[n] = (group_pos[n] * ys[i]).kurt(1).cumsum().rename('%s'%(n/num_group))
-                group_kurt[n].plot()
-            plt.legend(['%s'%i for i in range(num_group)])
-            plt.savefig('%s/Results/%s/group_kurt%s.png'%(gc.SINGLEFACTOR_PATH, self.factor_name, i))
-            plt.figure(figsize=(16, 12))
-            group_hist = [group_kurt[i].iloc[np.where(group_kurt[i].notna())[0][-1]] for i in range(num_group)]
-            plt.bar(range(num_group), group_hist)
-            plt.savefig('%s/Results/%s/group_kurt_hist%s.png'%(gc.SINGLEFACTOR_PATH, self.factor_name, i))
+            # plt.figure(figsize=(16, 12))
+            # group_kurt = {}
+            # for n in range(num_group):
+            #     group_kurt[n] = (group_pos[n] * ys[i]).kurt(1).cumsum().rename('%s'%(n/num_group))
+            #     group_kurt[n].plot()
+            # plt.legend(['%s'%i for i in range(num_group)])
+            # plt.savefig('%s/Results/%s/group_kurt%s.png'%(gc.SINGLEFACTOR_PATH, self.factor_name, i))
+            # plt.figure(figsize=(16, 12))
+            # group_hist = [group_kurt[i].iloc[np.where(group_kurt[i].notna())[0][-1]] for i in range(num_group)]
+            # plt.bar(range(num_group), group_hist)
+            # plt.savefig('%s/Results/%s/group_kurt_hist%s.png'%(gc.SINGLEFACTOR_PATH, self.factor_name, i))
         
         self.IC = IC
         self.IR = IR
