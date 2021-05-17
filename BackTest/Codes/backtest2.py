@@ -23,7 +23,7 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210514'
+    end_date = '20210517'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)
@@ -181,10 +181,6 @@ if __name__ == '__main__':
     
     r_hat = r_hat.loc[r.index, r.columns]
     
-    plt.figure(figsize=(16,12))
-    IC = r_hat.corrwith(y, axis=1).fillna(0)
-    IC.cumsum().plot()
-    plt.savefig('../Results/IC.png')
     #分组回测
     if True:
         sd = r_hat.std(1).mean() / 1000
@@ -250,6 +246,11 @@ if __name__ == '__main__':
         # plt.savefig('../Results/group_kurt_hist.png')
     
     
+    
+    plt.figure(figsize=(16,12))
+    IC = r_hat.corrwith(y, axis=1).fillna(0)
+    IC.cumsum().plot()
+    plt.savefig('../Results/IC.png')
     
     plt.figure(figsize=(16,12))
     r_hold.mean(1).cumsum().plot()

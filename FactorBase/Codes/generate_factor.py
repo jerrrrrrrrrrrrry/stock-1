@@ -59,7 +59,8 @@ if __name__ == '__main__':
     files = list(filter(lambda x:len(x)>4, files))
     factors_1 = list(filter(lambda x:x[-5:]=='_1.py', files))
     factors_2 = list(filter(lambda x:x[-5:]=='_2.py', files))
-    #factors_1 = ['MomentumWeighted_1.py']
+    # factors_1 = ['STR_1.py']
+    # factors_2 = []
     #生成单因子
     pool = mp.Pool(4)
     for p in factors_1:

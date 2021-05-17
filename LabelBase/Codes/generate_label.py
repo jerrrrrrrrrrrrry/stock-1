@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # DROE = DataFrame(index=OPEN.index, columns=OPEN.columns)
     # DROE.loc[:,:] = droe
     
-    qt = 0.666
+    qt = 0.75
     #dep0.3,dy0.4,ep0.5,cp0.2,sp0.05,roe0.4
     f = 4*BP + 5*EP + 5*CP + 1*SP + 1*DY + 5*DEP + 6*ROE
     # ic = f.corrwith(y, axis=1)
