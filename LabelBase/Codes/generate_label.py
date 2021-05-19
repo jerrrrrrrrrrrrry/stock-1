@@ -149,6 +149,7 @@ if __name__ == '__main__':
     print(r_plot.mean(1).sum())
     r_plot.mean(1).cumsum().plot()
     
+    f.to_csv('../Data/f.csv')
     low_f.to_csv('../Data/low_f.csv')
     low_liquid.to_csv('../Data/low_liquid.csv')
     low_price.to_csv('../Data/low_price.csv')

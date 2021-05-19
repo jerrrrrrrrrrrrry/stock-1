@@ -7,6 +7,7 @@ Created on Fri Feb 19 19:51:46 2021
 
 import os
 import sys
+import datetime
 import pandas as pd
 from pandas import Series, DataFrame
 import multiprocessing as mp
@@ -17,7 +18,10 @@ def f(file, date, d):
     data.to_csv('%s/%s'%(d, file))
 
 if __name__ == '__main__':
-    date = '20210507'
+    if len(sys.argv) == 2:
+        date = sys.argv[1]
+    else:
+        date = datetime.datetime.today().strftime('%Y%m%d')
     d = '../FactorBase/PreprocessData/'
     files = os.listdir(d)
     pool = mp.Pool(8)

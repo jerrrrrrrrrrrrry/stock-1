@@ -52,8 +52,8 @@ def main(factors):
         factor_df = DataFrame(factor_df, index=na_mask.index, columns=na_mask.columns)
         big_mask = factor_df.ge(factor_df.quantile(0.975, 1), 0)
         small_mask = factor_df.le(factor_df.quantile(0.025, 1), 0)
-        factor_df[na_mask.isna()] = np.nan
         factor_df[big_mask|small_mask] = 0
+        factor_df[na_mask] = np.nan
         factor_df_dic[factor] = factor_df
 
     beta_pos = pd.read_csv('%s/Results/beta_pos.csv'%gc.IC_PATH, index_col=[0], parse_dates=[0])

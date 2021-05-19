@@ -26,11 +26,12 @@ def f(factor, ind_list, no_neutral_list, industrys, neutral_apply, risk_df_list)
     #作风险中性
     #写入
     print(factor)
+    today = datetime.datetime.today().strftime('%Y%m%d')
     factor_df = pd.read_csv('%s/Data/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
     if os.path.exists('%s/PreprocessData/%s.csv'%(gc.FACTORBASE_PATH, factor)):
         preprocess_factor_df = pd.read_csv('%s/PreprocessData/%s.csv'%(gc.FACTORBASE_PATH, factor), index_col=[0], parse_dates=[0])
-        ind = preprocess_factor_df.index[-1]
-        factor_df = factor_df.loc[factor_df.index>ind, :]
+        # ind = preprocess_factor_df.index[-1]
+        factor_df = factor_df.loc[factor_df.index==today, :]
         if len(factor_df) == 0:
             return
     na_df = factor_df.isna()
@@ -43,7 +44,7 @@ def f(factor, ind_list, no_neutral_list, industrys, neutral_apply, risk_df_list)
         factor_df = factor_df.apply(func=neutral_apply, args=(risk_df_list,), axis=1)
     factor_df[na_df] = np.nan
     if os.path.exists('%s/PreprocessData/%s.csv'%(gc.FACTORBASE_PATH, factor)):
-        factor_df = pd.concat([preprocess_factor_df, factor_df], axis=0)
+        factor_df = pd.concat([preprocess_factor_df.loc[preprocess_factor_df.index<today], factor_df], axis=0)
     factor_df.to_csv('%s/PreprocessData/%s.csv'%(gc.FACTORBASE_PATH, factor))
 
 if __name__ == '__main__':
