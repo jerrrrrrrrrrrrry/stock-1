@@ -23,7 +23,7 @@ import statsmodels.tsa.api as tsa
 
 if __name__ == '__main__':
     begin_date = '20180101'
-    end_date = '20210519'
+    end_date = '20210520'
     # end_date = datetime.datetime.today().strftime('%Y%m%d')
     
     trade_cal = tools.get_trade_cal(begin_date, end_date)
@@ -64,10 +64,10 @@ if __name__ == '__main__':
     ic = DataFrame(index=r_hat_dic[r_hat_name_list[0]].index, columns=r_hat_name_list)
     y = y.loc[r_hat_dic[r_hat_name_list[0]].index, r_hat_dic[r_hat_name_list[0]].columns]
     
-    halflife_mean = 120
-    halflife_cov = 250
+    halflife_mean = 60
+    halflife_cov = 120
     a = 1
-    lamb = 1e-3
+    lamb = 1e-2
     n = 5
     lag = n+1
     
@@ -89,6 +89,7 @@ if __name__ == '__main__':
     r_hat = DataFrame(0, index=r.index, columns=r.columns)
     for r_hat_name in r_hat_name_list:
         r_hat = r_hat.add(r_hat_dic[r_hat_name].mul(weight.loc[:, r_hat_name], 0), fill_value=0)
+    r_hat = tools.standardize(r_hat)
     # r_hat = DataFrame(0, index=r.index, columns=r.columns)
     # for r_hat_name in r_hat_name_list:
     #     r_hat = r_hat.add(DataFrame(r_hat_dic[r_hat_name], index=r.index, columns=r.columns), fill_value=0)
@@ -185,11 +186,11 @@ if __name__ == '__main__':
     
     #分组回测
     if True:
-        sd = r_hat.std(1).mean() / 1000
-        np.random.seed(1)
-        e = np.random.randn(r_hat.shape[0], r_hat.shape[1]) * sd
-        r_hat = r_hat.fillna(0) + e
-        r_hat[r.isna()] = np.nan
+        # sd = r_hat.std(1).mean() / 1000
+        # np.random.seed(1)
+        # e = np.random.randn(r_hat.shape[0], r_hat.shape[1]) * sd
+        # r_hat = r_hat.fillna(0) + e
+        # r_hat[na] = np.nan
         factor_quantile = DataFrame(r_hat.rank(axis=1), index=r.index, columns=r.columns).div(r_hat.notna().sum(1), axis=0)# / len(factor.columns)
         # factor_quantile[r.isna()] = np.nan
         
@@ -250,7 +251,7 @@ if __name__ == '__main__':
     
     
     plt.figure(figsize=(16,12))
-    IC = r_hat.corrwith(y, axis=1).fillna(0)
+    IC = r_hat.fillna(0).corrwith(y, axis=1).fillna(0)
     IC.cumsum().plot()
     plt.savefig('../Results/IC.png')
     

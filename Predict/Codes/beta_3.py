@@ -70,9 +70,9 @@ def main(factors):
     beta_middle.fillna(0, inplace=True)
     beta_small.fillna(0, inplace=True)
     
-    halflife_mean = 120
+    halflife_mean = 60
     halflife_cov = 250
-    a = 0.5
+    a = 0.8
     lamb = 1e-3
     n = 5
     lag = n + 1

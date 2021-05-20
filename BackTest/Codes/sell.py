@@ -17,11 +17,10 @@ if __name__ == '__main__':
     position = [str(s) for s in position]
     position = ['300' + s if len(s)==3 else '3000' + s if len(s)==2 else s for s in position]
     
-    buy_list = ['002833', '000156', '002606', '002043', '000915',
-                '002110', '002026', '000637', '000828', '000026',
-                '002726', '300460', '603855', '603136']
-    sell_list= ['603803', '300219', '600017', '300679', '603368',
-                '002206', '002088', '601677', '603567', '300158']
+    buy_list = ['600429', '603477', '002884', '002518', '002088',]
+    sell_list= ['601789', '300307', '603917', '603035', '601801',
+                '603267', '601985', '601107', '600167', '002179',
+                '002637']
     
     position.extend(buy_list)
     position = list(set(position) - set(sell_list))
@@ -39,7 +38,7 @@ if __name__ == '__main__':
     print(len(position))
     
     date = today
-    date = '20210519'
+    date = '20210520'
     r_hat = pd.read_csv('../Results/r_hat.csv', index_col=[0], parse_dates=[0])
     
     na_mask = pd.read_csv('../../LabelBase/Data/na_mask.csv', index_col=[0], parse_dates=[0]).loc[date, :]

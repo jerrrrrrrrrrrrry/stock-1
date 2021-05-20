@@ -61,9 +61,9 @@ def main(factors):
     beta.fillna(method='ffill', inplace=True)
     beta.fillna(0, inplace=True)
     
-    halflife_mean = 120
+    halflife_mean = 60
     halflife_cov = 250
-    a = 0.1
+    a = 0.2
     lamb = 1e-4
     n = 5
     lag = n + 1
