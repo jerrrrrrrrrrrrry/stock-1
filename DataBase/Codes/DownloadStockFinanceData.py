@@ -14,11 +14,10 @@ import tools
 today = datetime.datetime.today().strftime('%Y%m%d')
 
 if len(sys.argv) > 1:
-    start = sys.argv[1]
+    start_date = sys.argv[1]
 else:
-    start = '20170101'
+    start_date = '20100101'
 end = today
-start_date = '20160101'
 pro = ts.pro_api()
 
 #获取行业分类
